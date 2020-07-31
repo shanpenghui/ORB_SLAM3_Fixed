@@ -134,7 +134,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     const float thHuber3D = sqrt(7.815);
 
     // Set MapPoint vertices
-    cout << "start inserting MPs" << endl;
+    //cout << "start inserting MPs" << endl;
 
     for(size_t i=0; i<vpMP.size(); i++)
     {

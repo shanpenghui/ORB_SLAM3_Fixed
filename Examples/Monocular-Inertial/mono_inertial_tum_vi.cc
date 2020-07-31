@@ -86,7 +86,6 @@ int main(int argc, char **argv)
         cout << "LOADED!" << endl;
 
         nImages[seq] = vstrImageFilenames[seq].size();
-        std::cout << "vstrImageFilenames[seq].size() = " << vstrImageFilenames[seq].size() << std::endl;
         tot_images += nImages[seq];
         nImu[seq] = vTimestampsImu[seq].size();
 
@@ -127,8 +126,6 @@ int main(int argc, char **argv)
         vector<ORB_SLAM3::IMU::Point> vImuMeas;
         proccIm = 0;
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-//        std::cout << "vstrImageFilenames[seq][ni] = " << vstrImageFilenames[0][0] << std::endl;
-//        std::cout << "vstrImageFilenames[seq][ni] = " << vstrImageFilenames[0][1] << std::endl;
         for(int ni=0; ni<nImages[seq]; ni++, proccIm++)
         {
 

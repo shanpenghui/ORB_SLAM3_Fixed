@@ -1,5 +1,5 @@
 #!/bin/bash
-pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
+pathDatasetTUM_VI='/Datasets/TUM_VI' #Example, it is necesary to change it by the dataset path
 
 #------------------------------------
 # Monocular Examples
