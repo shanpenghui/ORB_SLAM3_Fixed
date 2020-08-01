@@ -32,7 +32,7 @@
 #include <iterator>
 #include <cassert>
 #include <algorithm>
-
+#include <glog/logging.h>
 #include "estimate_propagator.h"
 #include "optimization_algorithm.h"
 #include "batch_stats.h"
@@ -197,24 +197,30 @@ namespace g2o{
   }
 
   bool SparseOptimizer::initializeOptimization(int level){
+    LOG(INFO) << "start VertexSet of HyperGraph";
     HyperGraph::VertexSet vset;
     for (VertexIDMap::iterator it=vertices().begin(); it!=vertices().end(); ++it)
       vset.insert(it->second);
+    LOG(INFO) << "end   VertexSet of HyperGraph";
     return initializeOptimization(vset,level);
   }
 
   bool SparseOptimizer::initializeOptimization(HyperGraph::VertexSet& vset, int level){
+    LOG(INFO) << "start initialize of Optimization";
     if (edges().size() == 0) {
       cerr << __PRETTY_FUNCTION__ << ": Attempt to initialize an empty graph" << endl;
       return false;
     }
     bool workspaceAllocated = _jacobianWorkspace.allocate(); (void) workspaceAllocated;
     assert(workspaceAllocated && "Error while allocating memory for the Jacobians");
+    LOG(INFO) << "start clearIndexMapping";
     clearIndexMapping();
+    LOG(INFO) << "end   clearIndexMapping";
     _activeVertices.clear();
     _activeVertices.reserve(vset.size());
     _activeEdges.clear();
     set<Edge*> auxEdgeSet; // temporary structure to avoid duplicates
+    LOG(INFO) << "start recycle of HyperGraph::VertexSet";
     for (HyperGraph::VertexSet::iterator it=vset.begin(); it!=vset.end(); ++it){
       OptimizableGraph::Vertex* v= (OptimizableGraph::Vertex*) *it;
       const OptimizableGraph::EdgeSet& vEdges=v->edges();
@@ -257,12 +263,17 @@ namespace g2o{
 
       }
     }
+    LOG(INFO) << "end   recycle of HyperGraph::VertexSet";
 
+    LOG(INFO) << "start push_back of _activeEdges";
     _activeEdges.reserve(auxEdgeSet.size());
     for (set<Edge*>::iterator it = auxEdgeSet.begin(); it != auxEdgeSet.end(); ++it)
       _activeEdges.push_back(*it);
+    LOG(INFO) << "end   push_back of _activeEdges";
 
+    LOG(INFO) << "start sort of VectorContainers";
     sortVectorContainers();
+    LOG(INFO) << "end   sort of VectorContainers";
     return buildIndexMapping(_activeVertices);
   }
 
@@ -555,7 +566,9 @@ namespace g2o{
 
   void SparseOptimizer::setVerbose(bool verbose)
   {
+    LOG(INFO) << "start set Verbose to false";
     _verbose = verbose;
+    LOG(INFO) << "end   set Verbose to false";
   }
 
   void SparseOptimizer::setAlgorithm(OptimizationAlgorithm* algorithm)

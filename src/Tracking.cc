@@ -21,7 +21,7 @@
 
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
-
+#include <glog/logging.h>
 #include"ORBmatcher.h"
 #include"FrameDrawer.h"
 #include"Converter.h"
@@ -1600,7 +1600,9 @@ void Tracking::CreateInitialMapMonocular()
 
     // Bundle Adjustment
     Verbose::PrintMess("New Map created with " + to_string(mpAtlas->MapPointsInMap()) + " points", Verbose::VERBOSITY_QUIET);
+    LOG(INFO) << "Start Optimizer::GlobalBundleAdjustemnt";
     Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(),20);
+    LOG(INFO) << "End   Optimizer::GlobalBundleAdjustemnt";
 
     pKFcur->PrintPointDistribution();
 

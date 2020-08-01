@@ -22,6 +22,7 @@
 #include<chrono>
 #include <ctime>
 #include <sstream>
+#include <glog/logging.h>
 
 #include<opencv2/core/core.hpp>
 
@@ -38,7 +39,15 @@ void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::P
 double ttrack_tot = 0;
 int main(int argc, char **argv)
 {
+    google::InitGoogleLogging(argv[0]);
+    google::SetLogDestination(google::GLOG_INFO, "/home/sph/Documents/ORB_SLAM3_Fixed/log_");
+    google::SetStderrLogging(google::GLOG_INFO);
+    FLAGS_colorlogtostderr = true;  // Set log color
+    FLAGS_logbufsecs = 0;  // Set log output speed(s)
+    FLAGS_max_log_size = 1024;  // Set max log file size
+    FLAGS_stop_logging_if_full_disk = true;
     const int num_seq = (argc-3)/3;
+    LOG(INFO) << "argc = " << argc;
     cout << "num_seq = " << num_seq << endl;
     bool bFileName= ((argc % 3) == 1);
 
@@ -46,6 +55,7 @@ int main(int argc, char **argv)
     if (bFileName)
         file_name = string(argv[argc-1]);
 
+    LOG(INFO) << "file name: " << file_name;
     cout << "file name: " << file_name << endl;
 
 
@@ -250,7 +260,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-string lltoString(string &input)
+string readStringtoString(string &input)
 {
     string result;
     ostringstream ss;
@@ -276,11 +286,10 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
         if(!s.empty())
         {
             stringstream ss;
-            string rlt = lltoString(s);
             string pre = strImagePath + "/";
+            string rlt = readStringtoString(s);
             rlt += ".png";
             string fi = pre + rlt;
-            //cout << fi << endl;
             vstrImages.push_back(fi);
             double t;
             ss >> t;
@@ -314,10 +323,12 @@ void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::P
             while ((pos = s.find(',')) != string::npos) {
                 item = s.substr(0, pos);
                 data[count++] = stod(item);
+//                LOG(INFO) << "data[" << count-1 << "]=" << item;
                 s.erase(0, pos + 1);
             }
             item = s.substr(0, pos);
             data[6] = stod(item);
+//            LOG(INFO) << "data[6]=" << item;
 
             vTimeStamps.push_back(data[0]/1e9);
             vAcc.push_back(cv::Point3f(data[4],data[5],data[6]));
