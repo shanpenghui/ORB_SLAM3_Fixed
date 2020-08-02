@@ -88,6 +88,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
         vector<float> vCamCalib{fx,fy,cx,cy,K1,K2,K3,K4};
 
+        LOG(WARNING) << __FUNCTION__ << " Create mpCamera from new KannalaBrandt8(vCamCalib)";
         mpCamera = new KannalaBrandt8(vCamCalib);
 
         mpAtlas->AddCamera(mpCamera);
@@ -112,6 +113,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
             vector<float> vCamCalib2{fx,fy,cx,cy,K1,K2,K3,K4};
 
+            LOG(WARNING) << __FUNCTION__ << " Create mpCamera2 from new KannalaBrandt8(vCamCalib2)";
             mpCamera2 = new KannalaBrandt8(vCamCalib2);
 
             mpAtlas->AddCamera(mpCamera2);
@@ -203,13 +205,20 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
     int fMinThFAST = fSettings["ORBextractor.minThFAST"];
 
+    LOG(WARNING) << __FUNCTION__ << " Create mpORBextractorLeft from new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST)";
     mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    if(sensor==System::STEREO || sensor==System::IMU_STEREO)
+    if(sensor==System::STEREO || sensor==System::IMU_STEREO){
+        LOG(WARNING) << __FUNCTION__ << " STEREO or IMU_STEREO, Create mpORBextractorRight from new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST)";
         mpORBextractorRight = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+    }
 
-    if(sensor==System::MONOCULAR || sensor==System::IMU_MONOCULAR)
+
+    if(sensor==System::MONOCULAR || sensor==System::IMU_MONOCULAR){
+        LOG(WARNING) << __FUNCTION__ << " MONOCULAR or IMU_MONOCULAR, Create mpIniORBextractor from new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST)";
         mpIniORBextractor = new ORBextractor(5*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+    }
+
 
     initID = 0; lastID = 0;
 
@@ -258,8 +267,10 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
         cout << "IMU accelerometer noise: " << Na << " m/s^2/sqrt(Hz)" << endl;
         cout << "IMU accelerometer walk: " << Naw << " m/s^3/sqrt(Hz)" << endl;
 
+        LOG(WARNING) << __FUNCTION__ << " Create mpImuCalib from new IMU::Calib(Tbc,Ng*sf,Na*sf,Ngw/sf,Naw/sf)";
         mpImuCalib = new IMU::Calib(Tbc,Ng*sf,Na*sf,Ngw/sf,Naw/sf);
 
+        LOG(WARNING) << __FUNCTION__ << " Create mpImuPreintegratedFromLastKF from new IMU::Preintegrated(IMU::Bias(),*mpImuCalib)";
         mpImuPreintegratedFromLastKF = new IMU::Preintegrated(IMU::Bias(),*mpImuCalib);
 
         mnFramesToResetIMU = mMaxFrames;
@@ -502,11 +513,14 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
     {
         if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
         {
-            cout << "init extractor" << endl;
+            //cout << "init extractor" << endl;
+            LOG(INFO) << __FUNCTION__ << " Initialize mCurrentFrame from Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib)";
             mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
         }
-        else
+        else{
+            LOG(INFO) << __FUNCTION__ << " Get mCurrentFrame from Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib)";
             mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        }
     }
 
     if (mState==NO_IMAGES_YET)
@@ -518,6 +532,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
     mCurrentFrame.mnDataset = mnNumDataset;
 
     lastID = mCurrentFrame.mnId;
+    LOG(INFO) << __FUNCTION__ << " Start Track()";
     Track();
 
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
@@ -1600,9 +1615,9 @@ void Tracking::CreateInitialMapMonocular()
 
     // Bundle Adjustment
     Verbose::PrintMess("New Map created with " + to_string(mpAtlas->MapPointsInMap()) + " points", Verbose::VERBOSITY_QUIET);
-    LOG(INFO) << "Start Optimizer::GlobalBundleAdjustemnt";
+//    LOG(INFO) << "Start Optimizer::GlobalBundleAdjustemnt";
     Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(),20);
-    LOG(INFO) << "End   Optimizer::GlobalBundleAdjustemnt";
+//    LOG(INFO) << "End   Optimizer::GlobalBundleAdjustemnt";
 
     pKFcur->PrintPointDistribution();
 

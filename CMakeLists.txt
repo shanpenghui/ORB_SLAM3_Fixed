@@ -115,6 +115,7 @@ include/MLPnPsolver.h
 include/TwoViewReconstruction.h
 src/TwoViewReconstruction.cc)
 
+add_subdirectory(Thirdparty/DBoW2)
 add_subdirectory(Thirdparty/g2o)
 
 target_link_libraries(${PROJECT_NAME}

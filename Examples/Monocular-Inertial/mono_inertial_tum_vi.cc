@@ -40,14 +40,13 @@ double ttrack_tot = 0;
 int main(int argc, char **argv)
 {
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO, "/home/sph/Documents/ORB_SLAM3_Fixed/log_");
+    google::SetLogDestination(google::GLOG_INFO, "./log_");
     google::SetStderrLogging(google::GLOG_INFO);
     FLAGS_colorlogtostderr = true;  // Set log color
     FLAGS_logbufsecs = 0;  // Set log output speed(s)
     FLAGS_max_log_size = 1024;  // Set max log file size
     FLAGS_stop_logging_if_full_disk = true;
     const int num_seq = (argc-3)/3;
-    LOG(INFO) << "argc = " << argc;
     cout << "num_seq = " << num_seq << endl;
     bool bFileName= ((argc % 3) == 1);
 
@@ -55,7 +54,6 @@ int main(int argc, char **argv)
     if (bFileName)
         file_name = string(argv[argc-1]);
 
-    LOG(INFO) << "file name: " << file_name;
     cout << "file name: " << file_name << endl;
 
 
@@ -125,6 +123,7 @@ int main(int argc, char **argv)
     cout << "IMU data in the sequence: " << nImu << endl << endl;*/
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
+    LOG(ERROR) << "Create SLAM system. It initializes all system threads and gets ready to process frames.";
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR, true, 0, file_name);
 
     int proccIm = 0;
@@ -185,6 +184,7 @@ int main(int argc, char **argv)
 
             // Pass the image to the SLAM system
             // cout << "tframe = " << tframe << endl;
+            LOG(INFO) << __FUNCTION__ << " Use SLAM.TrackMonocular(im,tframe,vImuMeas) to track features";
             SLAM.TrackMonocular(im,tframe,vImuMeas); // TODO change to monocular_inertial
 
     #ifdef COMPILEDWITHC11

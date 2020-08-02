@@ -299,6 +299,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 #ifdef SAVE_TIMES
     std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
 #endif
+    LOG(INFO) << __FUNCTION__ << " ExtractORB(0,imGray,0,1000)";
     ExtractORB(0,imGray,0,1000);
 #ifdef SAVE_TIMES
     std::chrono::steady_clock::time_point time_EndExtORB = std::chrono::steady_clock::now();
@@ -410,6 +411,7 @@ void Frame::AssignFeaturesToGrid()
 void Frame::ExtractORB(int flag, const cv::Mat &im, const int x0, const int x1)
 {
     vector<int> vLapping = {x0,x1};
+    LOG(INFO) << __FUNCTION__ << " Call ORBextractor::operator() from (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors,vLapping) or (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight,vLapping)";
     if(flag==0)
         monoLeft = (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors,vLapping);
     else

@@ -135,7 +135,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
     // Set MapPoint vertices
     //cout << "start inserting MPs" << endl;
-    LOG(INFO) << "start inserting MPs";
+//    LOG(INFO) << "start inserting MPs";
     for(size_t i=0; i<vpMP.size(); i++)
     {
         MapPoint* pMP = vpMP[i];
@@ -165,7 +165,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
             if(leftIndex != -1 && pKF->mvuRight[get<0>(mit->second)]<0)
             {
-                LOG(INFO) << "start monocular";
+//                LOG(INFO) << "start monocular";
                 const cv::KeyPoint &kpUn = pKF->mvKeysUn[leftIndex];
 
                 Eigen::Matrix<double,2,1> obs;
@@ -193,14 +193,14 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 vpEdgesMono.push_back(e);
                 vpEdgeKFMono.push_back(pKF);
                 vpMapPointEdgeMono.push_back(pMP);
-                LOG(INFO) << "vpEdgesMono.size()=" << vpEdgesMono.size()
-                    << " vpEdgeKFMono.size()=" << vpEdgeKFMono.size()
-                    << " vpMapPointEdgeMono.size()=" << vpMapPointEdgeMono.size();
-                LOG(INFO) << "end   monocular";
+//                LOG(INFO) << "vpEdgesMono.size()=" << vpEdgesMono.size()
+//                    << " vpEdgeKFMono.size()=" << vpEdgeKFMono.size()
+//                    << " vpMapPointEdgeMono.size()=" << vpMapPointEdgeMono.size();
+//                LOG(INFO) << "end   monocular";
             }
             else if(leftIndex != -1 && pKF->mvuRight[leftIndex] >= 0) //Stereo observation
             {
-                LOG(INFO) << "start stereo";
+//                LOG(INFO) << "start stereo";
                 const cv::KeyPoint &kpUn = pKF->mvKeysUn[leftIndex];
 
                 Eigen::Matrix<double,3,1> obs;
@@ -234,14 +234,14 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 vpEdgesStereo.push_back(e);
                 vpEdgeKFStereo.push_back(pKF);
                 vpMapPointEdgeStereo.push_back(pMP);
-                LOG(INFO) << "vpEdgesMono.size()=" << vpEdgesMono.size()
-                          << " vpEdgeKFMono.size()=" << vpEdgeKFMono.size()
-                          << " vpMapPointEdgeMono.size()=" << vpMapPointEdgeMono.size();
-                LOG(INFO) << "end   stereo";
+//                LOG(INFO) << "vpEdgesMono.size()=" << vpEdgesMono.size()
+//                          << " vpEdgeKFMono.size()=" << vpEdgeKFMono.size()
+//                          << " vpMapPointEdgeMono.size()=" << vpMapPointEdgeMono.size();
+//                LOG(INFO) << "end   stereo";
             }
 
             if(pKF->mpCamera2){
-                LOG(INFO) << "start pKF->mpCamera2";
+//                LOG(INFO) << "start pKF->mpCamera2";
                 int rightIndex = get<1>(mit->second);
 
                 if(rightIndex != -1 && rightIndex < pKF->mvKeysRight.size()){
@@ -272,7 +272,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                     vpEdgeKFBody.push_back(pKF);
                     vpMapPointEdgeBody.push_back(pMP);
                 }
-                LOG(INFO) << "end   pKF->mpCamera2";
+//                LOG(INFO) << "end   pKF->mpCamera2";
             }
         }
 
@@ -280,24 +280,24 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
         if(nEdges==0)
         {
-            LOG(INFO) << "nEdges==0";
+//            LOG(INFO) << "nEdges==0";
             optimizer.removeVertex(vPoint);
             vbNotIncludedMP[i]=true;
         }
         else
         {
-            LOG(INFO) << "nEdges!=0";
+//            LOG(INFO) << "nEdges!=0";
             vbNotIncludedMP[i]=false;
         }
     }
 
     //cout << "end inserting MPs" << endl;
-    LOG(INFO) << "end inserting MPs";
+//    LOG(INFO) << "end inserting MPs";
     // Optimize!
     optimizer.setVerbose(false);
     optimizer.initializeOptimization();
     optimizer.optimize(nIterations);
-    LOG(INFO) << "BA: End of the optimization";
+//    LOG(INFO) << "BA: End of the optimization";
     Verbose::PrintMess("BA: End of the optimization", Verbose::VERBOSITY_NORMAL);
 
     // Recover optimized data
