@@ -2,8 +2,8 @@
 
 Run:
 ```
-./build.sh
-./tum_vi.sh
+./shells/build.sh
+./shells/tum_vi.sh
 ```
 
 要注意的是,目前只有单目带IMU的被激活,里面的配置需要自己对应自己的电脑更新
