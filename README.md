@@ -1,5 +1,14 @@
 # ORB-SLAM3
 
+Run:
+```
+./build.sh
+./tum_vi.sh
+```
+
+要注意的是,目前只有单目带IMU的被激活,里面的配置需要自己对应自己的电脑更新
+
+
 ### V0.2: Beta version, 21 Jul 2020
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
 
