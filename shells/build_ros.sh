@@ -1,7 +1,15 @@
 echo "Building ROS nodes"
 
-cd Examples/ROS/ORB_SLAM3
+source /opt/ros/melodic/setup.bash
+
+cd ../Examples/ROS
+currentDir=$(pwd)
+
+cd ORB_SLAM3
 mkdir build
+
 cd build
-cmake .. -DROS_BUILD_TYPE=Release
-make -j
+
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:$currentDir
+cmake ..
+make -j 8

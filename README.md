@@ -1,6 +1,13 @@
 # ORB-SLAM3
+Before running, you should install google log:
 
-Run:
+```
+git clone https://github.com/google/glog
+cd glog
+./autogen.sh && ./configure && make && make install
+```
+
+Run ORB-SLAM3:
 ```
 ./shells/build.sh
 ./shells/tum_vi.sh
@@ -8,6 +15,25 @@ Run:
 
 要注意的是,目前只有单目带IMU的被激活,里面的配置需要自己对应自己的电脑更新
 
+原版ros的编译会出现ORBSLAM2的错误
+```
+error: ‘ORB_SLAM2’ has not been declared
+     ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
+```
+
+需要用指令修复：
+```
+sed -i "s/ORB_SLAM2/ORB_SLAM3/g" `grep -rl "ORB_SLAM2"`
+```
+
+原版ros的编译也有可能出现找不到文件的错误:
+```
+fatal error: GeometricCamera.h: No such file or directory #include "GeometricCamera.h"
+```
+需要在CMakeList添加文件路径:
+```
+${PROJECT_SOURCE_DIR}/../../../include/CameraModels
+```
 
 ### V0.2: Beta version, 21 Jul 2020
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).

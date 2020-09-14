@@ -37,11 +37,11 @@ using namespace std;
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
 
     void GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight);
 
-    ORB_SLAM2::System* mpSLAM;
+    ORB_SLAM3::System* mpSLAM;
     bool do_rectify;
     cv::Mat M1l,M2l,M1r,M2r;
 };
@@ -53,13 +53,13 @@ int main(int argc, char **argv)
 
     if(argc != 4)
     {
-        cerr << endl << "Usage: rosrun ORB_SLAM2 Stereo path_to_vocabulary path_to_settings do_rectify" << endl;
+        cerr << endl << "Usage: rosrun ORB_SLAM3 Stereo path_to_vocabulary path_to_settings do_rectify" << endl;
         ros::shutdown();
         return 1;
     }    
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::STEREO,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::STEREO,true);
 
     ImageGrabber igb(&SLAM);
 

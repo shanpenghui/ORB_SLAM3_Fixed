@@ -24,9 +24,9 @@
 #include <opencv2/core/core.hpp>
 #include <pangolin/pangolin.h>
 #include <string>
-#include"../../../include/System.h"
+#include <System.h>
 
-namespace ORB_SLAM2
+namespace ORB_SLAM3
 {
 
 class Plane
@@ -62,7 +62,7 @@ public:
         mT=1e3/fps;
     }
 
-    void SetSLAM(ORB_SLAM2::System* pSystem){
+    void SetSLAM(ORB_SLAM3::System* pSystem){
         mpSystem = pSystem;
     }
 
@@ -82,7 +82,7 @@ public:
 private:
 
     //SLAM
-    ORB_SLAM2::System* mpSystem;
+    ORB_SLAM3::System* mpSystem;
 
     void PrintStatus(const int &status, const bool &bLocMode, cv::Mat &im);
     void AddTextToImage(const std::string &s, cv::Mat &im, const int r=0, const int g=0, const int b=0);
