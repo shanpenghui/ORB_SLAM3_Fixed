@@ -128,6 +128,7 @@ ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 -lcrypto
 )
 
+include(test/CMakeLists.txt)
 
 # Build examples
 
