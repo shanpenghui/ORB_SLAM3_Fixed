@@ -7,7 +7,7 @@ cd glog
 ./autogen.sh && ./configure && make && make install
 ```
 
-###Build ORB-SLAM3:
+### Build ORB-SLAM3:
 Work in shells path
 ```
 cd shells
@@ -15,14 +15,15 @@ cd shells
 
 ```
 
-###Run ORB-SLAM3:
+### Run ORB-SLAM3:
 Before running, you should change the path in tum_vi.sh where you save the dataset, such as:
 ```
 pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
 ```
 
-Work in root path, such as project root path, 
+Work in shells path
 ```
+cd shells
 ./tum_vi.sh
 ```
 
