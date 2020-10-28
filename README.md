@@ -7,10 +7,23 @@ cd glog
 ./autogen.sh && ./configure && make && make install
 ```
 
-Run ORB-SLAM3:
+###Build ORB-SLAM3:
+Work in shells path
 ```
-./shells/build.sh
-./shells/tum_vi.sh
+cd shells
+./build.sh
+
+```
+
+###Run ORB-SLAM3:
+Before running, you should change the path in tum_vi.sh where you save the dataset, such as:
+```
+pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
+```
+
+Work in root path, such as project root path, 
+```
+./tum_vi.sh
 ```
 
 要注意的是,目前只有单目带IMU的被激活,里面的配置需要自己对应自己的电脑更新

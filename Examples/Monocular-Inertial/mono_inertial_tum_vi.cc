@@ -40,7 +40,8 @@ double ttrack_tot = 0;
 int main(int argc, char **argv)
 {
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO, "./log_");
+    google::SetLogDestination(google::GLOG_INFO, "./logs/log_info_");
+    google::SetLogDestination(google::GLOG_ERROR, "./logs/log_error_");
     google::SetStderrLogging(google::GLOG_INFO);
     FLAGS_colorlogtostderr = true;  // Set log color
     FLAGS_logbufsecs = 0;  // Set log output speed(s)

@@ -1,7 +1,8 @@
 #!/bin/bash
+cd ..
 currentDir=$(pwd)
 
-pathDatasetTUM_VI='/media/sph/TOSHIBA EXT/dataset' #Example, it is necesary to change it by the dataset path
+pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetTUM_VI" ];then
   echo  ""
 else
@@ -43,6 +44,12 @@ if  [ -f "$currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_5
   echo  ""
 else
   echo  "该文件不存在 $currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt "
+fi
+if  [ -d "logs" ];then
+  echo  ""
+else
+  echo  "logs 该文件夹不存在 创建"
+  mkdir logs
 fi
 ./Examples/Monocular-Inertial/mono_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt Examples/Monocular-Inertial/TUM_IMU/dataset-room4_512.txt dataset-room4_512_monoi
 
