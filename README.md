@@ -1,4 +1,7 @@
 # ORB-SLAM3
+The raw address:
+https://github.com/UZ-SLAMLab/ORB_SLAM3
+
 Before running, you should install google log:
 
 ```
@@ -47,6 +50,46 @@ fatal error: GeometricCamera.h: No such file or directory #include "GeometricCam
 需要在CMakeList添加文件路径:
 ```
 ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
+```
+
+### Run ORB-SLAM3 in ros
+Build ros version
+```
+cd shells
+./build_ros.sh
+```
+Set ROS_PACKAGE_PATH:
+```c++
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/home/sph/Documents/ORB_SLAM3_Fixed/Examples/ROS
+```
+Run ros-version ORB-SLAM3 in root path:
+```
+cd ORB_SLAM3_Fixed
+rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml
+```
+But!!!! You can`t run ORB-SLAM3 without run the camera_node!!!!
+So, if you want to test ros-version, just use your computer camera(wish you have)
+### Use usb_cam to run camera_node
+```
+git clone https://github.com/bosch-ros-pkg/usb_cam.git
+```
+Build and launch it, so you can see the /usb_cam/image_raw in rostopic.
+But, that is not enough!!!!!
+You should change the rostopic name in ORB-SLAM3, which is in Line 62, ros_mono.cc
+```
+ros::Subscriber sub = nodeHandler.subscribe("/usb_cam/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+```
+
+After the steps up, it work finally!
+
+##### A problem
+When I first run it, error come out:
+```
+Failed to load module "canberra-gtk-module"
+```
+To solve this problem, install the module:
+```
+sudo apt-get install libcanberra-gtk-module
 ```
 
 ### V0.2: Beta version, 21 Jul 2020
