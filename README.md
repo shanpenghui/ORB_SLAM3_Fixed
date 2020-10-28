@@ -2,12 +2,31 @@
 The raw address:
 https://github.com/UZ-SLAMLab/ORB_SLAM3
 
-Before running, you should install google log:
+Before running, you should install Pangolin
+```
+https://github.com/stevenlovegrove/Pangolin.git
+```
+
+```
+sudo apt install libglew-dev
+cd Pangolin
+mkdir build
+cd build
+cmake ..
+make -j 4
+sudo make install
+```
+
+google log:
 
 ```
 git clone https://github.com/google/glog
 cd glog
-./autogen.sh && ./configure && make && make install
+cmake -H. -Bbuild -G "Unix Makefiles"
+cmake --build build
+cmake --build build --target test
+cd build
+sudo make install
 ```
 
 ### Build ORB-SLAM3:
