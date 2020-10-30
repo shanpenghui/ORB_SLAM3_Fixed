@@ -2,11 +2,12 @@
 cd ..
 currentDir=$(pwd)
 
-pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
+pathDatasetTUM_VI='/home/sph/Downloads/dataset/TUM' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetTUM_VI" ];then
   echo  ""
 else
   echo  "该文件夹不存在 ${pathDatasetTUM_VI} "
+  exit 1
 fi
 
 #------------------------------------
