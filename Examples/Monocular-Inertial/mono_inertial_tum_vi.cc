@@ -22,7 +22,6 @@
 #include<chrono>
 #include <ctime>
 #include <sstream>
-#include <glog/logging.h>
 
 #include<opencv2/core/core.hpp>
 
@@ -39,14 +38,6 @@ void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::P
 double ttrack_tot = 0;
 int main(int argc, char **argv)
 {
-    google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO, "./logs/log_info_");
-    google::SetLogDestination(google::GLOG_ERROR, "./logs/log_error_");
-    google::SetStderrLogging(google::GLOG_INFO);
-    FLAGS_colorlogtostderr = true;  // Set log color
-    FLAGS_logbufsecs = 0;  // Set log output speed(s)
-    FLAGS_max_log_size = 1024;  // Set max log file size
-    FLAGS_stop_logging_if_full_disk = true;
     const int num_seq = (argc-3)/3;
     cout << "num_seq = " << num_seq << endl;
     bool bFileName= ((argc % 3) == 1);
@@ -124,7 +115,6 @@ int main(int argc, char **argv)
     cout << "IMU data in the sequence: " << nImu << endl << endl;*/
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    LOG(ERROR) << "Create SLAM system. It initializes all system threads and gets ready to process frames.";
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR, true, 0, file_name);
 
     int proccIm = 0;
@@ -185,7 +175,6 @@ int main(int argc, char **argv)
 
             // Pass the image to the SLAM system
             // cout << "tframe = " << tframe << endl;
-            LOG(INFO) << __FUNCTION__ << " Use SLAM.TrackMonocular(im,tframe,vImuMeas) to track features";
             SLAM.TrackMonocular(im,tframe,vImuMeas); // TODO change to monocular_inertial
 
     #ifdef COMPILEDWITHC11
@@ -261,16 +250,6 @@ int main(int argc, char **argv)
     return 0;
 }
 
-string readStringtoString(string &input)
-{
-    string result;
-    ostringstream ss;
-    ss << input;
-    istringstream is(ss.str());
-    is >> result;
-    return result;
-}
-
 void LoadImages(const string &strImagePath, const string &strPathTimes,
                 vector<string> &vstrImages, vector<double> &vTimeStamps)
 {
@@ -287,11 +266,8 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
         if(!s.empty())
         {
             stringstream ss;
-            string pre = strImagePath + "/";
-            string rlt = readStringtoString(s);
-            rlt += ".png";
-            string fi = pre + rlt;
-            vstrImages.push_back(fi);
+            ss << s;
+            vstrImages.push_back(strImagePath + "/" + ss.str() + ".png");
             double t;
             ss >> t;
             vTimeStamps.push_back(t/1e9);
@@ -324,12 +300,10 @@ void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::P
             while ((pos = s.find(',')) != string::npos) {
                 item = s.substr(0, pos);
                 data[count++] = stod(item);
-//                LOG(INFO) << "data[" << count-1 << "]=" << item;
                 s.erase(0, pos + 1);
             }
             item = s.substr(0, pos);
             data[6] = stod(item);
-//            LOG(INFO) << "data[6]=" << item;
 
             vTimeStamps.push_back(data[0]/1e9);
             vAcc.push_back(cv::Point3f(data[4],data[5],data[6]));

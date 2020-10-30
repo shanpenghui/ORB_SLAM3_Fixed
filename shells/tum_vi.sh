@@ -26,11 +26,13 @@ if  [ -f "$currentDir/Vocabulary/ORBvoc.txt" ];then
   echo  ""
 else
   echo  "该文件不存在 $currentDir/Vocabulary/ORBvoc.txt "
+  exit 1
 fi
 if  [ -f "$currentDir/Examples/Monocular-Inertial/TUM_512.yaml" ];then
   echo  ""
 else
   echo  "该文件不存在 $currentDir/Examples/Monocular-Inertial/TUM_512.yaml "
+  exit 1
 fi
 # 这里有个问题是我实际的路径是/media/sph/TOSHIBA EXT/dataset/dataset-corridor4_512_16/dataset-corridor4_512_16/mav0/cam0/data
 # 而代码中看到的是/media/sph/TOSHIBA EXT/dataset/dataset-corridor4_512_16/mav0/cam0/data, 少了一层dataset-corridor4_512_16
@@ -39,11 +41,13 @@ if  [ -d ""$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data" ];then
   echo  ""
 else
   echo  "该文件夹不存在 "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data "
+  exit 1
 fi
 if  [ -f "$currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt" ];then
   echo  ""
 else
   echo  "该文件不存在 $currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt "
+  exit 1
 fi
 if  [ -d "logs" ];then
   echo  ""

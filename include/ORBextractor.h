@@ -22,7 +22,6 @@
 #include <vector>
 #include <list>
 #include <opencv/cv.h>
-#include <glog/logging.h>
 
 
 namespace ORB_SLAM3

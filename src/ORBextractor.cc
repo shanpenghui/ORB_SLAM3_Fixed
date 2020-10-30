@@ -410,7 +410,6 @@ namespace ORB_SLAM3
             nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels),
             iniThFAST(_iniThFAST), minThFAST(_minThFAST)
     {
-        LOG(INFO) << __FUNCTION__ << " start";
         mvScaleFactor.resize(nlevels);
         mvLevelSigma2.resize(nlevels);
         mvScaleFactor[0]=1.0f;
@@ -466,7 +465,6 @@ namespace ORB_SLAM3
             umax[v] = v0;
             ++v0;
         }
-        LOG(INFO) << __FUNCTION__ << "   end";
     }
 
     static void computeOrientation(const Mat& image, vector<KeyPoint>& keypoints, const vector<int>& umax)
@@ -1070,7 +1068,6 @@ namespace ORB_SLAM3
     int ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints,
                                   OutputArray _descriptors, std::vector<int> &vLappingArea)
     {
-        LOG(INFO) << __FUNCTION__ << " [ORBextractor]: Max Features: " << nfeatures;
         //cout << "[ORBextractor]: Max Features: " << nfeatures << endl;
         if(_image.empty())
             return -1;
@@ -1079,7 +1076,6 @@ namespace ORB_SLAM3
         assert(image.type() == CV_8UC1 );
 
         // Pre-compute the scale pyramid
-        LOG(INFO) << __FUNCTION__ << " ComputePyramid(image)";
         ComputePyramid(image);
 
         vector < vector<KeyPoint> > allKeypoints;

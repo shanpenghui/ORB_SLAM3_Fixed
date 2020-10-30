@@ -78,7 +78,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Load ORB Vocabulary
     cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
 
-    LOG(WARNING) << __FUNCTION__ << " Create mpVocabulary from new ORBVocabulary()";
     mpVocabulary = new ORBVocabulary();
     bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
     if(!bVocLoad)
@@ -90,12 +89,10 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     cout << "Vocabulary loaded!" << endl << endl;
 
     //Create KeyFrame Database
-    LOG(WARNING) << __FUNCTION__ << " Create mpKeyFrameDatabase from new KeyFrameDatabase(*mpVocabulary)";
     mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
     //Create the Atlas
     //mpMap = new Map();
-    LOG(WARNING) << __FUNCTION__ << " Create Atlas from new Atlas(0)";
     mpAtlas = new Atlas(0);
     //----
 
@@ -170,22 +167,17 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         mpAtlas->SetInertialSensor();
 
     //Create Drawers. These are used by the Viewer
-    LOG(WARNING) << __FUNCTION__ << " Create mpFrameDrawer from new FrameDrawer(mpAtlas)";
     mpFrameDrawer = new FrameDrawer(mpAtlas);
-    LOG(WARNING) << __FUNCTION__ << " Create mpMapDrawer from new MapDrawer(mpAtlas, strSettingsFile)";
     mpMapDrawer = new MapDrawer(mpAtlas, strSettingsFile);
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     cout << "Seq. Name: " << strSequence << endl;
-    LOG(WARNING) << __FUNCTION__ << " Create mpTracker from new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer, mpAtlas, mpKeyFrameDatabase, strSettingsFile, mSensor, strSequence)";
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
                              mpAtlas, mpKeyFrameDatabase, strSettingsFile, mSensor, strSequence);
 
     //Initialize the Local Mapping thread and launch
-    LOG(WARNING) << __FUNCTION__ << " Create mpLocalMapper from new LocalMapping(this, mpAtlas, mSensor==MONOCULAR || mSensor==IMU_MONOCULAR, mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO, strSequence)";
     mpLocalMapper = new LocalMapping(this, mpAtlas, mSensor==MONOCULAR || mSensor==IMU_MONOCULAR, mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO, strSequence);
-    LOG(WARNING) << __FUNCTION__ << " Create mptLocalMapping from new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper)";
     mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
     mpLocalMapper->mInitFr = initFr;
     mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
@@ -199,9 +191,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Initialize the Loop Closing thread and launch
     // mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
-    LOG(WARNING) << __FUNCTION__ << " Create mpLoopCloser from new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR)";
     mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR); // mSensor!=MONOCULAR);
-    LOG(WARNING) << __FUNCTION__ << " Create mptLoopClosing from new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser)";
     mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
@@ -405,26 +395,8 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const
     if (mSensor == System::IMU_MONOCULAR)
         for(size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
             mpTracker->GrabImuData(vImuMeas[i_imu]);
-    LOG(INFO) << __FUNCTION__ << " Use mpTracker->GrabImageMonocular(im,timestamp,filename) to get cv::Mat Tcw";
-    cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp,filename);
 
-    /*if(mpLocalMapper->mbNewInit)
-    {
-        // Save data
-        SaveDebugData(mpLocalMapper->mIdxInit);
-        mpLocalMapper->mbNewInit=false;
-        // Check if reset
-        {
-            unique_lock<mutex> lock(mMutexReset);
-            if(mpLocalMapper->mInitTime>10.0)
-            {
-                mpTracker->Reset();
-                mbReset = false;
-                mbResetActiveMap = false;
-                mpLocalMapper->mInitSect++;
-            }
-        }
-    }*/
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp,filename);
 
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;

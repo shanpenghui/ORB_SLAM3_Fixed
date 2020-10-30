@@ -32,7 +32,7 @@
 #include <iterator>
 #include <cassert>
 #include <algorithm>
-#include <glog/logging.h>
+
 #include "estimate_propagator.h"
 #include "optimization_algorithm.h"
 #include "batch_stats.h"
