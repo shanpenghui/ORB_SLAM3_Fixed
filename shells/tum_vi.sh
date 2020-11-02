@@ -1,6 +1,7 @@
 #!/bin/bash
 cd ..
 currentDir=$(pwd)
+runType=Monocular-Inertial
 
 pathDatasetTUM_VI='/home/sph/Downloads/dataset/TUM' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetTUM_VI" ];then
@@ -22,17 +23,17 @@ fi
 
 #------------------------------------
 # Monocular-Inertial Examples
-echo "Launching Room 4 with Monocular-Inertial sensor"
+echo "Launching Room 4 with $runType sensor"
 if  [ -f "$currentDir/Vocabulary/ORBvoc.txt" ];then
   echo  ""
 else
   echo  "该文件不存在 $currentDir/Vocabulary/ORBvoc.txt "
   exit 1
 fi
-if  [ -f "$currentDir/Examples/Monocular-Inertial/TUM_512.yaml" ];then
+if  [ -f "$currentDir/Examples/$runType/TUM_512.yaml" ];then
   echo  ""
 else
-  echo  "该文件不存在 $currentDir/Examples/Monocular-Inertial/TUM_512.yaml "
+  echo  "该文件不存在 $currentDir/Examples/$runType/TUM_512.yaml "
   exit 1
 fi
 # 这里有个问题是我实际的路径是/media/sph/TOSHIBA EXT/dataset/dataset-corridor4_512_16/dataset-corridor4_512_16/mav0/cam0/data
@@ -44,10 +45,10 @@ else
   echo  "该文件夹不存在 "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data "
   exit 1
 fi
-if  [ -f "$currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt" ];then
+if  [ -f "$currentDir/Examples/$runType/TUM_TimeStamps/dataset-room4_512.txt" ];then
   echo  ""
 else
-  echo  "该文件不存在 $currentDir/Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt "
+  echo  "该文件不存在 $currentDir/Examples/$runType/TUM_TimeStamps/dataset-room4_512.txt "
   exit 1
 fi
 if  [ -d "logs" ];then
@@ -56,7 +57,7 @@ else
   echo  "logs 该文件夹不存在 创建"
   mkdir logs
 fi
-./Examples/Monocular-Inertial/mono_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/Monocular-Inertial/TUM_TimeStamps/dataset-room4_512.txt Examples/Monocular-Inertial/TUM_IMU/dataset-room4_512.txt dataset-room4_512_monoi
+./Examples/Monocular-Inertial/mono_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/"$runType"/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/"$runType"/TUM_TimeStamps/dataset-room4_512.txt Examples/"$runType"/TUM_IMU/dataset-room4_512.txt dataset-room4_512_monoi
 
 # MultiSession Monocular Examples
 #echo "Launching all Rooms (1-6) in the same session with Stereo-Inertial sensor"
