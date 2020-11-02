@@ -2,6 +2,12 @@
 The raw address:
 https://github.com/UZ-SLAMLab/ORB_SLAM3
 
+详见：
+EVO Evaluation of SLAM 4 --- ORB-SLAM3 编译和利用数据集运行
+https://blog.csdn.net/shanpenghui/article/details/109354918
+EVO Evaluation of SLAM 5 --- ORB-SLAM3 精度和性能效果评估
+https://blog.csdn.net/shanpenghui/article/details/109361766
+
 Before running, you should install Pangolin
 ```
 https://github.com/stevenlovegrove/Pangolin.git
