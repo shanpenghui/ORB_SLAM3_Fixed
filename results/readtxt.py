@@ -19,6 +19,9 @@ for i in range(rows-1):
             csv_data_float[i][j] = csv_data_float[i][j]/1e9
         # print(csv_data_float[i][j])
 
+# Have to calculate manually for fixing recycle bug
+csv_data_float[rows-1][0] = csv_data_float[rows-1][0]/1e9
+
 csvfile_write = open('f_dataset-room4_512_mono_calib.csv','w')
 
 print("Writing data into file, wait...")
