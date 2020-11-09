@@ -3,23 +3,23 @@ import numpy as np
 import csv
 import os
 
-with open('data_tum_room4_512_16.csv','r') as f:
-    csv_data = np.loadtxt(f, str, delimiter = ",")
+with open('f_dataset-room4_512_mono.txt','r') as f:
+    csv_data = np.loadtxt(f, str, delimiter = " ")
     # print(data)
 
 [rows, cols] = csv_data.shape
-print(rows)
-print(cols)
+# print(rows)
+print("cols = ", cols)
 
 csv_data_float = csv_data.astype(np.float)
 
 for i in range(rows-1):
     for j in range(cols-1):
         if(j==0):
-            csv_data_float[i][j] = csv_data_float[i][j]
+            csv_data_float[i][j] = csv_data_float[i][j]/1e9
         # print(csv_data_float[i][j])
 
-csvfile_write = open('data_tum_room4_512_16_calib.csv','w')
+csvfile_write = open('f_dataset-room4_512_mono_calib.csv','w')
 
 print("Writing data into file, wait...")
 
