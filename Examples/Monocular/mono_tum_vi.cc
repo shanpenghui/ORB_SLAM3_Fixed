@@ -54,6 +54,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    google::InitGoogleLogging(argv[0]);
+    google::SetLogDestination(google::GLOG_INFO, "/home/sph/Documents/orbslam/ORB_SLAM3_Fixed/logs/log_");
+    google::SetStderrLogging(google::GLOG_INFO);
+
     // Load all sequences:
     int seq;
     vector< vector<string> > vstrImageFilenames;
@@ -103,6 +107,7 @@ int main(int argc, char **argv)
         {
 
             // Read image from file
+//            cout << "image file name = " << vstrImageFilenames[seq][ni] << endl;
             im = cv::imread(vstrImageFilenames[seq][ni],cv::IMREAD_GRAYSCALE);
 
             // clahe

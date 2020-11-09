@@ -674,7 +674,9 @@ void System::SaveTrajectoryEuRoC(const string &filename)
             cv::Mat Rwb = Tbw.rowRange(0,3).colRange(0,3).t();
             cv::Mat twb = -Rwb*Tbw.rowRange(0,3).col(3);
             vector<float> q = Converter::toQuaternion(Rwb);
-            f << setprecision(6) << 1e9*(*lT) << " " <<  setprecision(9) << twb.at<float>(0) << " " << twb.at<float>(1) << " " << twb.at<float>(2) << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+            f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twb.at<float>(0)
+                << " " << twb.at<float>(1) << " " << twb.at<float>(2)
+                << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
         }
         else
         {
@@ -682,7 +684,9 @@ void System::SaveTrajectoryEuRoC(const string &filename)
             cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
             cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
             vector<float> q = Converter::toQuaternion(Rwc);
-            f << setprecision(6) << 1e9*(*lT) << " " <<  setprecision(9) << twc.at<float>(0) << " " << twc.at<float>(1) << " " << twc.at<float>(2) << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+            f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twc.at<float>(0)
+                << " " << twc.at<float>(1) << " " << twc.at<float>(2)
+                << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
         }
 
         // cout << "5" << endl;

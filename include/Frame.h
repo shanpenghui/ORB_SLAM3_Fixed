@@ -32,6 +32,7 @@
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
+#include <glog/logging.h>
 
 namespace ORB_SLAM3
 {
