@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ..
 currentDir=$(pwd)
-runType=Monocular-Inertial
+runType=Stereo-Inertial
 
 pathDatasetTUM_VI='/home/sph/Downloads/dataset/TUM' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetTUM_VI" ];then
@@ -11,19 +11,6 @@ else
   exit 1
 fi
 
-#------------------------------------
-# Monocular Examples
-#echo "Launching Room 4 with Monocular sensor"
-#./Examples/Monocular/mono_tum_vi Vocabulary/ORBvoc.txt Examples/Monocular/TUM_VI.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/Monocular/TUM_TimeStamps/dataset-room4_512.txt dataset-room4_512_mono
-
-#------------------------------------
-# Stereo Examples
-#echo "Launching Room 4 with Stereo sensor"
-#./Examples/Stereo/stereo_tum_vi Vocabulary/ORBvoc.txt Examples/Stereo/TUM_VI.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam1/data Examples/Stereo/TUM_TimeStamps/dataset-room4_512.txt dataset-room4_512_stereo
-
-#------------------------------------
-# Monocular-Inertial Examples
-echo "Launching Room 4 with $runType sensor"
 if  [ -f "$currentDir/Vocabulary/ORBvoc.txt" ];then
   echo  ""
 else
@@ -57,7 +44,21 @@ else
   echo  "logs 该文件夹不存在 创建"
   mkdir logs
 fi
-./Examples/Monocular-Inertial/mono_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/"$runType"/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/"$runType"/TUM_TimeStamps/dataset-room4_512.txt Examples/"$runType"/TUM_IMU/dataset-room4_512.txt dataset-room4_512_monoi
+
+#------------------------------------
+# Monocular Examples
+echo "Launching Room 4 with $runType sensor"
+./Examples/Monocular/mono_tum_vi Vocabulary/ORBvoc.txt Examples/Monocular/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/Monocular/TUM_TimeStamps/dataset-room4_512.txt dataset-room4_512_mono
+
+#------------------------------------
+# Stereo Examples
+#echo "Launching Room 4 with Stereo sensor"
+#./Examples/Stereo/stereo_tum_vi Vocabulary/ORBvoc.txt Examples/Stereo/TUM_VI.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam1/data Examples/Stereo/TUM_TimeStamps/dataset-room4_512.txt dataset-room4_512_stereo
+
+#------------------------------------
+# Monocular-Inertial Examples
+#echo "Launching Room 4 with $runType sensor"
+#./Examples/Monocular-Inertial/mono_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/"$runType"/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data Examples/"$runType"/TUM_TimeStamps/dataset-room4_512.txt Examples/"$runType"/TUM_IMU/dataset-room4_512.txt dataset-room4_512_monoi
 
 # MultiSession Monocular Examples
 #echo "Launching all Rooms (1-6) in the same session with Stereo-Inertial sensor"
@@ -65,7 +66,7 @@ fi
 
 #------------------------------------
 # Stereo-Inertial Examples
-#echo "Launching Room 4 with Stereo-Inertial sensor"
+#echo "Launching Room 4 with $runType sensor"
 #./Examples/Stereo-Inertial/stereo_inertial_tum_vi Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/TUM_512.yaml "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam0/data "$pathDatasetTUM_VI"/dataset-room4_512_16/mav0/cam1/data Examples/Stereo-Inertial/TUM_TimeStamps/dataset-room4_512.txt Examples/Stereo-Inertial/TUM_IMU/dataset-room4_512.txt dataset-room4_512_stereoi
 
 # MultiSession Stereo-Inertial Examples
