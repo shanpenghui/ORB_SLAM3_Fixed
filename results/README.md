@@ -1,44 +1,82 @@
 # Evo evaluate ORB-SLAM3
-In this example, I use EuRoc MH_01_easy, the address is:
->http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_01_easy/MH_01_easy.zip
+Use evo tool to evaluate ORB-SLAM3
 
-The MH_01_easy_data.csv comes from MH_01_easy/mav0/state_groundtruth_estimate0/data.csv
-The MH_01_easy_data.tum comes from
-```shell script
-evo_traj euroc data.csv --save_as_tum
-```
+# EVO Unros Monocular ORB-SLAM3 TUM
+## 1 - TUM Visual-Inertial Dataset
+The address is:
+>https://vision.in.tum.de/data/datasets/visual-inertial-dataset
 
-The MH_01_easy_FrameTrajectory_TUM_Format.txt comes from the result:
+In this example, I use dataset-room4_512_16.
+
+### Usage Steps
+
+#### 1.Run ORB-SLAM3
 ```shell script
 cd shells
-./euroc.sh
+./tum_vi.sh
 ```
+Get the result file as : 
+>f_dataset-room4_512_mono.txt
+>kf_dataset-room4_512_mono.txt
+>
 
-Evo evaluation:
 
+#### 2.Process the ORB-SLAM3 result file
+Move the result files above to the results folder
 ```shell script
-evo_ape tum MH_01_easy_data.tum MH_01_easy_f_dataset-MH01_monoi.txt -va --plot --plot_mode xyz --save_results orbslam_MH_01_easy.zip
+cd ORB_SLAM3_Fixed
+cp f_dataset-room4_512_mono.txt results
+cp kf_dataset-room4_512_mono.txt results
+cd results
+python process_orbslam_result.py
 ```
+Change the file name in process_orbslam_result.py Line 6 and Line 25
+```python
+Line 6
+with open('f_dataset-room4_512_mono.txt','r') as f:
 
-Correct Steps:
-```shell script
-evo_traj tum f_dataset-room4_512_mono.tum -p
+Line 25
+csvfile_write = open('f_dataset-room4_512_mono_calib.csv','w')
 ```
-
-change readtxt.py to get data_tum_room4_512_16_calib.csv from data_tum_room4_512_16.csv
+Process calibration files
 ```
-evo_traj tum data_tum_room4_512_16_calib.csv --save_as_tum
-```
-change readtxt.py to get f_dataset-room4_512_mono_calib.csv from f_dataset-room4_512_mono.txt
-```
+evo_traj tum f_dataset-room4_512_mono_calib.csv -p
 evo_traj tum f_dataset-room4_512_mono_calib.csv --save_as_tum
 evo_traj tum data_tum_room4_512_16_calib.tum --ref=f_dataset-room4_512_mono_calib.tum -va -p -s
-evo_ape tum data_tum_room4_512_16_calib.tum f_dataset-room4_512_mono_calib.tum -p -s -a --save_results orbslam3_mono_unros_tum_room4_512_16.zip
+```
+#### 3.Process the TUM groundtruth
+```shell script
+cp <path_to_tum_dataset/dataset-room4_512_16/mav0/mocap0/data.csv> results
+```
+Change the file name in process_orbslam_result.py Line 6 and Line 25
+```python
+Line 6
+with open('data_tum_room4_512_16.csv','r') as f:
+
+Line 25
+csvfile_write = open('data_tum_room4_512_16_calib.csv','w')
+```
+Process:
+```shell script
+python process_dataset_gt.py
+```
+Test if trajectory correct
+```shell script
+evo_traj tum data_tum_room4_512_16_calib.csv -p
+evo_traj tum data_tum_room4_512_16_calib.csv --save_as_tum
 ```
 
+#### 4.Compare the TUM groundtruth and the ORB-SLAM3 result
+```shell script
+evo_traj tum f_dataset-room4_512_mono_calib.tum --ref=data_tum_room4_512_16_calib.tum -v -a -p -s
+```
 
+#### 5.Calculate ATE of ORB-SLAM3 Monocular
+```shell script
+evo_ape tum f_dataset-room4_512_mono_calib.tum data_tum_room4_512_16_calib.tum -v -a -p -s --save_results orbslam3_mono_unros_tum_room4_512_16.zip
+```
 
-References:
+# References:
 
 >EVO Estimate SLAM 5 --- ORB-SLAM3 Evaluation
 >
