@@ -78,6 +78,14 @@ evo_ape tum f_dataset-room4_512_mono_calib.tum data_tum_room4_512_16_calib.tum -
 ![Result](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Screenshot%20from%202020-11-10%2010-28-55.png)
 ![Result](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Screenshot%20from%202020-11-10%2010-29-05.png)
 
+#### 6.Process multiple results from a metric
+```shell script
+evo_res orbslam3_mono_unros_tum_room4_512_16.zip -p --save_table table.csv
+```
+![Result](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Screenshot%20from%202020-11-10%2010-28-55.png)
+![Result](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Screenshot%20from%202020-11-10%2010-29-05.png)
+
+
 # References:
 
 >EVO Estimate SLAM 5 --- ORB-SLAM3 Evaluation
