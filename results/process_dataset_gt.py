@@ -3,7 +3,14 @@ import numpy as np
 import csv
 import os
 
-with open('data_tum_room4_512_16.csv','r') as f:
+dataset_path = 'dataset-corridor1_512_16/gt'
+gt_name = 'data.csv'
+input_file_name = dataset_path + '/' + gt_name
+
+output_name = 'gt.csv'
+output_file_name = dataset_path + '/' + output_name
+
+with open(input_file_name, 'r') as f:
     csv_data = np.loadtxt(f, str, delimiter = ",")
     # print(data)
 
@@ -22,7 +29,7 @@ for i in range(rows-1):
 # Have to calculate manually for fixing recycle bug
 csv_data_float[rows-1][0] = csv_data_float[rows-1][0]/1e9
 
-csvfile_write = open('data_tum_room4_512_16_calib.csv','w')
+csvfile_write = open(output_file_name, 'w')
 
 print("Writing data into file, wait...")
 
