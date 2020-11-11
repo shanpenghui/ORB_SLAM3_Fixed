@@ -2,8 +2,8 @@
 cd ..
 currentDir=$(pwd)
 runType=Monocular
-datasetType=dataset-corridor1_512_16
-timestampType=dataset-corridor1_512
+datasetType=dataset-corridor2_512_16
+timestampType=dataset-corridor2_512
 
 pathDatasetTUM_VI='/home/sph/Downloads/dataset/TUM' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetTUM_VI" ];then

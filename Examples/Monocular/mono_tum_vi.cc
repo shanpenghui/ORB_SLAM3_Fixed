@@ -111,7 +111,7 @@ int main(int argc, char **argv)
             im = cv::imread(vstrImageFilenames[seq][ni],cv::IMREAD_GRAYSCALE);
 
             // clahe
-            clahe->apply(im,im);
+//            clahe->apply(im,im);
 
 
             // cout << "mat type: " << im.type() << endl;

@@ -3,11 +3,11 @@ import numpy as np
 import csv
 import os
 
-dataset_path = 'dataset-corridor1_512_16/clahe'
+dataset_path = 'dataset-corridor2_512_16/raw'
 file_name = 'f_.txt'
 input_file_name = dataset_path + '/' + file_name
 
-output_name = 'clahe.csv'
+output_name = 'raw.csv'
 output_file_name = dataset_path + '/' + output_name
 
 with open(input_file_name, 'r') as f:

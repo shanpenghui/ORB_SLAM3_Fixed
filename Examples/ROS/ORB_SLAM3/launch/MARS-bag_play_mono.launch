@@ -1,0 +1,10 @@
+<launch>
+
+    <param name = "use_sim_time" value = "true"/>
+
+    <node name="republishsterer" type="republish" pkg="image_transport" respawn="true"  output="screen"
+          args="compressed in:=/camera_front_l/image_raw
+    raw out:=/camera/image_raw"/>
+
+
+</launch>

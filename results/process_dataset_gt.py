@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import os
 
-dataset_path = 'dataset-corridor1_512_16/gt'
+dataset_path = 'dataset-corridor2_512_16/gt'
 gt_name = 'data.csv'
 input_file_name = dataset_path + '/' + gt_name
 
