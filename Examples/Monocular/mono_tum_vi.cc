@@ -55,8 +55,8 @@ int main(int argc, char **argv)
     }
 
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO, "/home/sph/Documents/orbslam/ORB_SLAM3_Fixed/logs/log_");
-    google::SetStderrLogging(google::GLOG_INFO);
+    google::SetLogDestination(google::GLOG_INFO, "/home/sph/Documents/slam/ORB_SLAM3_Fixed/logs/log_");
+    google::SetStderrLogging(google::GLOG_WARNING);
 
     // Load all sequences:
     int seq;
@@ -130,7 +130,9 @@ int main(int argc, char **argv)
     #endif
 
             // Pass the image to the SLAM system
-            SLAM.TrackMonocular(im,tframe); // TODO change to monocular_inertial
+//            LOG(INFO) << "filename = " << vstrImageFilenames[seq][ni];
+            vector<ORB_SLAM3::IMU::Point> vImuMeas;
+            SLAM.TrackMonocular(im, tframe, vImuMeas, vstrImageFilenames[seq][ni]); // TODO change to monocular_inertial
 
     #ifdef COMPILEDWITHC11
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();

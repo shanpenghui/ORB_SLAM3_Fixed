@@ -116,12 +116,10 @@ bool TwoViewReconstruction::Reconstruct(const std::vector<cv::KeyPoint>& vKeys1,
     // Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
     if(RH>0.50) // if(RH>0.40)
     {
-        //cout << "Initialization from Homography" << endl;
         return ReconstructH(vbMatchesInliersH,H, mK,R21,t21,vP3D,vbTriangulated,minParallax,50);
     }
     else //if(pF_HF>0.6)
     {
-        //cout << "Initialization from Fundamental" << endl;
         return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,minParallax,50);
     }
 }

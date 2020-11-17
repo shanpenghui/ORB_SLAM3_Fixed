@@ -20,7 +20,7 @@
 #define TwoViewReconstruction_H
 
 #include<opencv2/opencv.hpp>
-
+#include "glog/logging.h"
 #include <unordered_set>
 
 namespace ORB_SLAM3
