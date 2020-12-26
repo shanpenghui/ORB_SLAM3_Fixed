@@ -96,15 +96,15 @@ namespace ORB_SLAM3 {
         SetRansacParameters();
     }
 
-/**
- * @brief MLPnP迭代计算
- *
- * @param[in] nIterations   迭代次数
- * @param[in] bNoMore       达到最大迭代次数的标志
- * @param[in] vbInliers     内点的标记
- * @param[in] nInliers      总共内点数
- * @return cv::Mat          计算出来的位姿
- */
+    /**
+     * @brief MLPnP迭代计算
+     *
+     * @param[in] nIterations   迭代次数
+     * @param[in] bNoMore       达到最大迭代次数的标志
+     * @param[in] vbInliers     内点的标记
+     * @param[in] nInliers      总共内点数
+     * @return cv::Mat          计算出来的位姿
+     */
     //RANSAC methods
 	cv::Mat MLPnPsolver::iterate(int nIterations, bool &bNoMore, vector<bool> &vbInliers, int &nInliers){
 		bNoMore = false;           // 已经达到最大迭代次数的标志
@@ -835,7 +835,14 @@ namespace ORB_SLAM3 {
         //////////////////////////////////////
         // 5. gauss newton
         //////////////////////////////////////
+        // 求解非线性方程之前，需要得到罗德里格斯参数，来表达李群(SO3) -> 李代数(so3)的对数映射
         rodrigues_t omega = rot2rodrigues(Rout);
+        //        |r1|
+        //        |r2|
+        // minx = |r3|
+        //        |t1|
+        //        |t2|
+        //        |t3|
         Eigen::VectorXd minx(6);
         minx[0] = omega[0];
         minx[1] = omega[1];
@@ -844,10 +851,13 @@ namespace ORB_SLAM3 {
         minx[4] = tout[1];
         minx[5] = tout[2];
 
+        // 利用高斯牛顿迭代法来提炼相机位姿 pose
         mlpnp_gn(minx, points3v, nullspaces, P, use_cov);
 
+        //
         Rout = rodrigues2rot(rodrigues_t(minx[0], minx[1], minx[2]));
         tout = translation_t(minx[3], minx[4], minx[5]);
+
         // result inverse as opengv uses this convention
         result.block<3, 3>(0, 0) = Rout;//Rout.transpose();
         result.block<3, 1>(0, 3) = tout;//-result.block<3, 3>(0, 0) * tout;
@@ -870,17 +880,37 @@ namespace ORB_SLAM3 {
         return R;
     }
 
+    // 问题: 李群(SO3) -> 李代数(so3)的对数映射
+    // 利用罗德里格斯公式，已知旋转矩阵的情况下，求解其对数映射ln(R)
+    // 就像《视觉十四讲》里面说到的，使用李代数的一大动机是为了进行优化,而在优化过程中导数是非常必要的信息
+    // 李群SO(3)中完成两个矩阵乘法，不能用李代数so(3)中的加法表示，问题描述为两个李代数对数映射乘积
+    // 而两个李代数对数映射乘积的完整形式，可以用BCH公式表达，其中式子(左乘BCH近似雅可比J)可近似表达，该式也就是罗德里格斯公式
+    // 计算完罗德里格斯参数之后，就可以用非线性优化方法了，里面就要用到导数，其形式就是李代数指数映射
+    // 所以要在调用非线性MLPnP算法之前计算罗德里格斯参数
     Eigen::Vector3d MLPnPsolver::rot2rodrigues(const Eigen::Matrix3d &R) {
         rodrigues_t omega;
         omega << 0.0, 0.0, 0.0;
 
+        // R.trace() 矩阵的迹，即该矩阵的特征值总和
         double trace = R.trace() - 1.0;
+
+        // 李群(SO3) -> 李代数(so3)的对数映射
+        // 对数映射ln(R)∨将一个旋转矩阵转换为一个李代数，但由于对数的泰勒展开不是很优雅所以用本式
+        // wnorm是求解出来的角度
         double wnorm = acos(trace / 2.0);
+
+        // 如果wnorm大于运行编译程序的计算机所能识别的最小非零浮点数，则可以生成向量，否则为0
         if (wnorm > std::numeric_limits<double>::epsilon())
         {
+            //        |r11 r21 r31|
+            //   R  = |r12 r22 r32|
+            //        |r13 r23 r33|
             omega[0] = (R(2, 1) - R(1, 2));
             omega[1] = (R(0, 2) - R(2, 0));
             omega[2] = (R(1, 0) - R(0, 1));
+            //             theta       |r23 - r32|
+            // ln(R) =  ------------ * |r31 - r13|
+            //          2*sin(theta)   |r12 - r21|
             double sc = wnorm / (2.0*sin(wnorm));
             omega *= sc;
         }
