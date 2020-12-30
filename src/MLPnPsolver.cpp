@@ -2,7 +2,7 @@
 * @file         MLPnPsolver.cpp
 * @author       Penghui Shan (445890978@qq.com)
 * @brief        MLPnP 相机位姿求解器
-* @version      0.6
+* @version      0.7
 * @date         2020-12-30
 *
 * @copyright Copyright (c) 2020-2021
@@ -239,8 +239,8 @@ namespace ORB_SLAM3 {
 	            // 如果该结果是目前内点数最多的，说明该结果是目前最好的，保存起来
 	            if(mnInliersi>mnBestInliers)
 	            {
-	                mvbBestInliers = mvbInliersi;
-	                mnBestInliers = mnInliersi;
+	                mvbBestInliers = mvbInliersi;   // 每个点是否是内点的标记
+	                mnBestInliers = mnInliersi;     // 内点个数
 
 	                cv::Mat Rcw(3,3,CV_64F,mRi);
 	                cv::Mat tcw(3,1,CV_64F,mti);
@@ -251,7 +251,7 @@ namespace ORB_SLAM3 {
 	                tcw.copyTo(mBestTcw.rowRange(0,3).col(3));
 	            }
 
-	            // 用新的内点对相机位姿精求解，提高位姿估计精度，这里函数直接返回该值，不再计算
+	            // 用新的内点对相机位姿精求解，提高位姿估计精度，这里如果有足够内点的话，函数直接返回该值，不再继续计算
 	            if(Refine())
 	            {
 	                nInliers = mnRefinedInliers;
@@ -383,9 +383,9 @@ namespace ORB_SLAM3 {
      * @brief 使用新的内点来继续对位姿进行精求解
      */
     bool MLPnPsolver::Refine(){
+        // 记录内点的索引值
         vector<int> vIndices;
         vIndices.reserve(mvbBestInliers.size());
-
         for(size_t i=0; i<mvbBestInliers.size(); i++)
         {
             if(mvbBestInliers[i])
@@ -395,10 +395,17 @@ namespace ORB_SLAM3 {
         }
 
         //Bearing vectors and 3D points used for this ransac iteration
+        // 因为是重定义，所以要另外定义局部变量，和iterate里面一样
+        // 初始化单位向量和3D点，给当前重定义函数使用
         bearingVectors_t bearingVecs;
         points_t p3DS;
         vector<int> indexes;
 
+        // 注意这里是用所有内点vIndices.size()来进行相机位姿估计
+        // 而iterate里面是用最小集mRansacMinSet(6个)来进行相机位姿估计
+        // TODO:有什么区别呢？答：肯定有啦，mRansacMinSet只是粗略解，
+        // 这里之所以要Refine就是要用所有满足模型的内点来更加精确地近似表达模型
+        // 这样求出来的解才会更加准确
         for(size_t i=0; i<vIndices.size(); i++)
         {
             int idx = vIndices[i];
@@ -407,6 +414,8 @@ namespace ORB_SLAM3 {
             p3DS.push_back(mvP3Dw[idx]);
             indexes.push_back(i);
         }
+
+        // 后面操作和iterate类似，就不赘述了
 
         //By the moment, we are using MLPnP without covariance info
         cov3_mats_t covs(1);
@@ -949,15 +958,19 @@ namespace ORB_SLAM3 {
      * @param[out] R            旋转矩阵
      */
     Eigen::Matrix3d MLPnPsolver::rodrigues2rot(const Eigen::Vector3d &omega) {
+        // 初始化旋转矩阵
         rotation_t R = Eigen::Matrix3d::Identity();
 
+        // 求旋转向量的反对称矩阵
         Eigen::Matrix3d skewW;
         skewW << 0.0, -omega(2), omega(1),
                 omega(2), 0.0, -omega(0),
                 -omega(1), omega(0), 0.0;
 
+        // 求旋转向量的角度
         double omega_norm = omega.norm();
 
+        // 通过罗德里格斯公式把旋转向量转换成旋转矩阵
         if (omega_norm > std::numeric_limits<double>::epsilon())
             R = R + sin(omega_norm) / omega_norm * skewW
                 + (1 - cos(omega_norm)) / (omega_norm * omega_norm) * (skewW * skewW);
