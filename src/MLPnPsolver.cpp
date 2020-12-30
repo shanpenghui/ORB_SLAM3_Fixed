@@ -1,4 +1,14 @@
 /**
+* @file         MLPnPsolver.cpp
+* @author       Penghui Shan (445890978@qq.com)
+* @brief        MLPnP 相机位姿求解器
+* @version      0.6
+* @date         2020-12-30
+*
+* @copyright Copyright (c) 2020-2021
+*
+*/
+/**
 * This file is part of ORB-SLAM3
 *
 * Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
@@ -49,43 +59,73 @@
 
 #include <Eigen/Sparse>
 
-// 基于《MLPNP - A REAL-TIME MAXIMUM LIKELIHOOD SOLUTION TO THE PERSPECTIVE-N-POINT PROBLEM》论文来写的方法
+// MLPnP算法，极大似然PnP算法，解决PnP问题，用在重定位中，不用运动的先验知识来估计相机位姿
+// 基于论文《MLPNP - A REAL-TIME MAXIMUM LIKELIHOOD SOLUTION TO THE PERSPECTIVE-N-POINT PROBLEM》
 
 namespace ORB_SLAM3 {
-    MLPnPsolver::MLPnPsolver(const Frame &F, const vector<MapPoint *> &vpMapPointMatches):
-            mnInliersi(0), mnIterations(0), mnBestInliers(0), N(0), mpCamera(F.mpCamera){
-        mvpMapPointMatches = vpMapPointMatches;
-        mvBearingVecs.reserve(F.mvpMapPoints.size());
-        mvP2D.reserve(F.mvpMapPoints.size());
-        mvSigma2.reserve(F.mvpMapPoints.size());
-        mvP3Dw.reserve(F.mvpMapPoints.size());
-        mvKeyPointIndices.reserve(F.mvpMapPoints.size());
-        mvAllIndices.reserve(F.mvpMapPoints.size());
+    /**
+     * @brief MLPnP 构造函数
+     *
+     * @param[in] F                         输入帧的数据
+     * @param[in] vpMapPointMatches         待匹配的特征点
+     * @param[in] mnInliersi                内点的个数
+     * @param[in] mnIterations              Ransac迭代次数
+     * @param[in] mnBestInliers             最佳内点数
+     * @param[in] N                         所有2D点的个数
+     * @param[in] mpCamera                  相机模型，利用该变量对3D点进行投影
+     */
+    MLPnPsolver::MLPnPsolver(const Frame &F,                                // 输入帧的数据
+                             const vector<MapPoint *> &vpMapPointMatches    // 待匹配的特征点，是当前帧和候选关键帧用BoW进行快速匹配的结果
+                             ):
+            mnInliersi(0),          // 内点的个数
+            mnIterations(0),        // Ransac迭代次数
+            mnBestInliers(0),       // 最佳内点数
+            N(0),                   // 所有2D点的个数
+            mpCamera(F.mpCamera)    // 相机模型，利用该变量对3D点进行投影
+            {
+        mvpMapPointMatches = vpMapPointMatches;             // 待匹配的特征点，是当前帧和候选关键帧用BoW进行快速匹配的结果
+        mvBearingVecs.reserve(F.mvpMapPoints.size());       // 初始化3D点的单位向量
+        mvP2D.reserve(F.mvpMapPoints.size());               // 初始化3D点的投影点
+        mvSigma2.reserve(F.mvpMapPoints.size());            // 初始化卡方检验中的sigma值
+        mvP3Dw.reserve(F.mvpMapPoints.size());              // 初始化3D点坐标
+        mvKeyPointIndices.reserve(F.mvpMapPoints.size());   // 初始化3D点的索引值
+        mvAllIndices.reserve(F.mvpMapPoints.size());        // 初始化所有索引值
 
         int idx = 0;
         for(size_t i = 0, iend = mvpMapPointMatches.size(); i < iend; i++){
             MapPoint* pMP = vpMapPointMatches[i];
 
+            // 如果pMP存在，则接下来初始化一些参数，否则什么都不做
             if(pMP){
+                // 判断是否是坏点
                 if(!pMP -> isBad()){
+                    // 如果记录的点个数超过总数，则不做任何事情，否则继续记录
                     if(i >= F.mvKeysUn.size()) continue;
                     const cv::KeyPoint &kp = F.mvKeysUn[i];
 
+                    // 保存3D点的投影点
                     mvP2D.push_back(kp.pt);
+
+                    // 保存卡方检验中的sigma值
                     mvSigma2.push_back(F.mvLevelSigma2[kp.octave]);
 
                     //Bearing vector should be normalized
+                    // 特征点投影，并计算单位向量
                     cv::Point3f cv_br = mpCamera->unproject(kp.pt);
                     cv_br /= cv_br.z;
                     bearingVector_t br(cv_br.x,cv_br.y,cv_br.z);
                     mvBearingVecs.push_back(br);
 
                     //3D coordinates
+                    // 获取当前特征点的3D坐标
                     cv::Mat cv_pos = pMP -> GetWorldPos();
                     point_t pos(cv_pos.at<float>(0),cv_pos.at<float>(1),cv_pos.at<float>(2));
                     mvP3Dw.push_back(pos);
 
+                    // 记录当前特征点的索引值，挑选后的
                     mvKeyPointIndices.push_back(i);
+
+                    // 记录所有特征点的索引值
                     mvAllIndices.push_back(idx);
 
                     idx++;
@@ -93,6 +133,7 @@ namespace ORB_SLAM3 {
             }
         }
 
+        // 设置RANSAC参数
         SetRansacParameters();
     }
 
@@ -170,6 +211,7 @@ namespace ORB_SLAM3 {
             transformation_t result;
 
 	        // Compute camera pose
+	        // 相机位姿估计
             computePose(bearingVecs,p3DS,covs,indexes,result);
 
             //Save result
@@ -188,11 +230,13 @@ namespace ORB_SLAM3 {
             mti[0] = result(0,3);mti[1] = result(1,3);mti[2] = result(2,3);
 
 	        // Check inliers
+	        // 卡方检验内点
 	        CheckInliers();
 
 	        if(mnInliersi>=mRansacMinInliers)
 	        {
 	            // If it is the best solution so far, save it
+	            // 如果该结果是目前内点数最多的，说明该结果是目前最好的，保存起来
 	            if(mnInliersi>mnBestInliers)
 	            {
 	                mvbBestInliers = mvbInliersi;
@@ -207,6 +251,7 @@ namespace ORB_SLAM3 {
 	                tcw.copyTo(mBestTcw.rowRange(0,3).col(3));
 	            }
 
+	            // 用新的内点对相机位姿精求解，提高位姿估计精度，这里函数直接返回该值，不再计算
 	            if(Refine())
 	            {
 	                nInliers = mnRefinedInliers;
@@ -222,6 +267,7 @@ namespace ORB_SLAM3 {
 	        }
 	    } // 迭代
 
+	    // 程序运行到这里，说明Refine失败了，说明精求解过程中，内点的个数不满足最小阈值，那就只能在当前结果中选择内点数最多的那个最小集
 	    if(mnIterations>=mRansacMaxIts)
 	    {
 	        bNoMore=true;
@@ -238,21 +284,33 @@ namespace ORB_SLAM3 {
 	        }
 	    }
 
+	    // 程序运行到这里，那说明没有满足条件的相机位姿估计结果，位姿估计失败了
 	    return cv::Mat();
 	}
 
+    /**
+     * @brief 设置RANSAC迭代的参数
+     *
+     * @param[in] probability       模型最大概率值，默认0.9
+     * @param[in] minInliers        内点的最小阈值，默认8
+     * @param[in] maxIterations     最大迭代次数，默认300
+     * @param[in] minSet            最小集，每次采样六个点，即最小集应该设置为6，论文里面写着I > 5
+     * @param[in] epsilon           理论最少内点个数，这里是按照总数的比例计算，所以epsilon是比例，默认是0.4
+     * @param[in] th2               卡方检验阈值
+     *
+     */
 	void MLPnPsolver::SetRansacParameters(double probability, int minInliers, int maxIterations, int minSet, float epsilon, float th2){
-		mRansacProb = probability;
-	    mRansacMinInliers = minInliers;
-	    mRansacMaxIts = maxIterations;
-	    mRansacEpsilon = epsilon;
-	    mRansacMinSet = minSet;
 
-	    N = mvP2D.size(); // number of correspondences
-
-	    mvbInliersi.resize(N);
+	    mRansacProb = probability;          // 模型最大概率值，默认0.9
+	    mRansacMinInliers = minInliers;     // 内点的最小阈值，默认8
+	    mRansacMaxIts = maxIterations;      // 最大迭代次数，默认300
+	    mRansacEpsilon = epsilon;           // 理论最少内点个数，这里是按照总数的比例计算，所以epsilon是比例，默认是0.4
+	    mRansacMinSet = minSet;             // 每次采样六个点，即最小集应该设置为6，论文里面写着I > 5
+	    N = mvP2D.size();                   // number of correspondences
+	    mvbInliersi.resize(N);              // 是否是内点的标记位
 
 	    // Adjust Parameters according to number of correspondences
+        // 计算最少个数点，选择(给定内点数, 最小集, 理论内点数)的最小值
 	    int nMinInliers = N*mRansacEpsilon;
 	    if(nMinInliers<mRansacMinInliers)
 	        nMinInliers=mRansacMinInliers;
@@ -260,45 +318,55 @@ namespace ORB_SLAM3 {
 	        nMinInliers=minSet;
 	    mRansacMinInliers = nMinInliers;
 
+        // 根据最终得到的"最小内点数"来调整 内点数/总体数 比例epsilon
 	    if(mRansacEpsilon<(float)mRansacMinInliers/N)
 	        mRansacEpsilon=(float)mRansacMinInliers/N;
 
+        // 根据给出的各种参数计算RANSAC的理论迭代次数,并且敲定最终在迭代过程中使用的RANSAC最大迭代次数
 	    // Set RANSAC iterations according to probability, epsilon, and max iterations
 	    int nIterations;
-
 	    if(mRansacMinInliers==N)
 	        nIterations=1;
 	    else
 	        nIterations = ceil(log(1-mRansacProb)/log(1-pow(mRansacEpsilon,3)));
-
 	    mRansacMaxIts = max(1,min(nIterations,mRansacMaxIts));
 
-	    mvMaxError.resize(mvSigma2.size());
+        // 计算不同图层上的特征点在进行内点检验的时候,所使用的不同判断误差阈值
+	    mvMaxError.resize(mvSigma2.size()); // 层数
 	    for(size_t i=0; i<mvSigma2.size(); i++)
-	        mvMaxError[i] = mvSigma2[i]*th2;
+	        mvMaxError[i] = mvSigma2[i]*th2;        // 不同的尺度，设置不同的最大偏差
 	}
 
+    /**
+     * @brief 通过之前求解的(R t)检查哪些3D-2D点对属于inliers
+     */
     void MLPnPsolver::CheckInliers(){
         mnInliersi=0;
 
+        // 遍历当前帧中所有的匹配点
         for(int i=0; i<N; i++)
         {
+            // 取出对应的3D点和2D点
             point_t p = mvP3Dw[i];
             cv::Point3f P3Dw(p(0),p(1),p(2));
             cv::Point2f P2D = mvP2D[i];
 
+            // 将3D点由世界坐标系旋转到相机坐标系
             float xc = mRi[0][0]*P3Dw.x+mRi[0][1]*P3Dw.y+mRi[0][2]*P3Dw.z+mti[0];
             float yc = mRi[1][0]*P3Dw.x+mRi[1][1]*P3Dw.y+mRi[1][2]*P3Dw.z+mti[1];
             float zc = mRi[2][0]*P3Dw.x+mRi[2][1]*P3Dw.y+mRi[2][2]*P3Dw.z+mti[2];
 
+            // 将相机坐标系下的3D进行投影
             cv::Point3f P3Dc(xc,yc,zc);
             cv::Point2f uv = mpCamera->project(P3Dc);
 
+            // 计算残差
             float distX = P2D.x-uv.x;
             float distY = P2D.y-uv.y;
 
             float error2 = distX*distX+distY*distY;
 
+            // 判定是不是内点
             if(error2<mvMaxError[i])
             {
                 mvbInliersi[i]=true;
@@ -311,6 +379,9 @@ namespace ORB_SLAM3 {
         }
     }
 
+    /**
+     * @brief 使用新的内点来继续对位姿进行精求解
+     */
     bool MLPnPsolver::Refine(){
         vector<int> vIndices;
         vIndices.reserve(mvbBestInliers.size());
@@ -367,7 +438,16 @@ namespace ORB_SLAM3 {
         return false;
     }
 
-	//MLPnP methods
+    /**
+     * @brief MLPnP相机位姿估计
+     *
+     * @param[in] f             单位向量
+     * @param[in] p             点的3D坐标
+     * @param[in] covMats       协方差矩阵
+     * @param[in] indices       对应点的索引值
+     * @param[in] result        相机位姿估计结果
+     *
+     */
     void MLPnPsolver::computePose(const bearingVectors_t &f, const points_t &p, const cov3_mats_t &covMats,
                                   const std::vector<int> &indices, transformation_t &result) {
 	    // 函数 assert 检验条件
@@ -863,6 +943,11 @@ namespace ORB_SLAM3 {
         result.block<3, 1>(0, 3) = tout;//-result.block<3, 3>(0, 0) * tout;
     } // End of computerPose
 
+    /**
+     * @brief 旋转向量转换成旋转矩阵，即李群->李代数
+     * @param[in]  omega        旋转向量
+     * @param[out] R            旋转矩阵
+     */
     Eigen::Matrix3d MLPnPsolver::rodrigues2rot(const Eigen::Vector3d &omega) {
         rotation_t R = Eigen::Matrix3d::Identity();
 
@@ -880,13 +965,18 @@ namespace ORB_SLAM3 {
         return R;
     }
 
-    // 问题: 李群(SO3) -> 李代数(so3)的对数映射
-    // 利用罗德里格斯公式，已知旋转矩阵的情况下，求解其对数映射ln(R)
-    // 就像《视觉十四讲》里面说到的，使用李代数的一大动机是为了进行优化,而在优化过程中导数是非常必要的信息
-    // 李群SO(3)中完成两个矩阵乘法，不能用李代数so(3)中的加法表示，问题描述为两个李代数对数映射乘积
-    // 而两个李代数对数映射乘积的完整形式，可以用BCH公式表达，其中式子(左乘BCH近似雅可比J)可近似表达，该式也就是罗德里格斯公式
-    // 计算完罗德里格斯参数之后，就可以用非线性优化方法了，里面就要用到导数，其形式就是李代数指数映射
-    // 所以要在调用非线性MLPnP算法之前计算罗德里格斯参数
+    /**
+     * @brief 旋转矩阵转换成旋转向量，即李代数->李群
+     * @param[in]  R       旋转矩阵
+     * @param[out] omega   旋转向量
+     问题: 李群(SO3) -> 李代数(so3)的对数映射
+     利用罗德里格斯公式，已知旋转矩阵的情况下，求解其对数映射ln(R)
+     就像《视觉十四讲》里面说到的，使用李代数的一大动机是为了进行优化,而在优化过程中导数是非常必要的信息
+     李群SO(3)中完成两个矩阵乘法，不能用李代数so(3)中的加法表示，问题描述为两个李代数对数映射乘积
+     而两个李代数对数映射乘积的完整形式，可以用BCH公式表达，其中式子(左乘BCH近似雅可比J)可近似表达，该式也就是罗德里格斯公式
+     计算完罗德里格斯参数之后，就可以用非线性优化方法了，里面就要用到导数，其形式就是李代数指数映射
+     所以要在调用非线性MLPnP算法之前计算罗德里格斯参数
+     */
     Eigen::Vector3d MLPnPsolver::rot2rodrigues(const Eigen::Matrix3d &R) {
         rodrigues_t omega;
         omega << 0.0, 0.0, 0.0;
@@ -917,6 +1007,14 @@ namespace ORB_SLAM3 {
         return omega;
     }
 
+    /**
+     * @brief MLPnP的高斯牛顿解法
+     * @param[in]  x                未知量矩阵
+     * @param[in]  pts              3D点矩阵
+     * @param[in]  nullspaces       零空间向量
+     * @param[in]  Kll              协方差矩阵
+     * @param[in]  use_cov          协方差方法使用标记位
+     */
     void MLPnPsolver::mlpnp_gn(Eigen::VectorXd &x, const points_t &pts, const std::vector<Eigen::MatrixXd> &nullspaces,
                                const Eigen::SparseMatrix<double> Kll, bool use_cov) {
         const int numObservations = pts.size();
@@ -984,6 +1082,15 @@ namespace ORB_SLAM3 {
         // result
     }
 
+    /**
+     * @brief 计算Jacobian矩阵和残差
+     * @param[in]  x                未知量矩阵
+     * @param[in]  pts              3D点矩阵
+     * @param[in]  nullspaces       零空间向量
+     * @param[in]  r                f(x)函数
+     * @param[out] fjac             f(x)函数的Jacobian矩阵
+     * @param[in]  getJacs          是否可以得到Jacobian矩阵标记位
+     */
     void MLPnPsolver::mlpnp_residuals_and_jacs(const Eigen::VectorXd &x, const points_t &pts,
                                                const std::vector<Eigen::MatrixXd> &nullspaces, Eigen::VectorXd &r,
                                                Eigen::MatrixXd &fjac, bool getJacs) {
@@ -1033,6 +1140,15 @@ namespace ORB_SLAM3 {
         }
     }
 
+    /**
+     * @brief 计算Jacobian矩阵
+     * @param[in]  pt               3D点矩阵
+     * @param[in]  nullspace_r      零空间向量r
+     * @param[in]  nullspace_r      零空间向量s
+     * @param[in]  w                旋转向量w
+     * @param[in]  t                平移向量t
+     * @param[out] jacs             Jacobian矩阵
+     */
     void MLPnPsolver::mlpnpJacs(const point_t& pt, const Eigen::Vector3d& nullspace_r,
             					const Eigen::Vector3d& nullspace_s, const rodrigues_t& w,
             					const translation_t& t, Eigen::MatrixXd& jacs){
