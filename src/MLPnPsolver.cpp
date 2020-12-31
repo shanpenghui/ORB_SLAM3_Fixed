@@ -138,7 +138,7 @@ namespace ORB_SLAM3 {
     }
 
     /**
-     * @brief MLPnP迭代计算
+     * @brief MLPnP迭代计算相机位姿
      *
      * @param[in] nIterations   迭代次数
      * @param[in] bNoMore       达到最大迭代次数的标志
@@ -153,7 +153,7 @@ namespace ORB_SLAM3 {
 	    nInliers=0;                // 当前次迭代时的内点数
 
         // N为所有2D点的个数, mRansacMinInliers为正常退出RANSAC迭代过程中最少的inlier数
-	    // 如果2D点个数不足以启动RANSAC迭代过程的最小下限，则退出
+	    // step 1 判断，如果2D点个数不足以启动RANSAC迭代过程的最小下限，则退出
 	    if(N<mRansacMinInliers)
 	    {
 	        bNoMore = true;     // 已经达到最大迭代次数的标志
@@ -167,6 +167,7 @@ namespace ORB_SLAM3 {
         // 当前的迭代次数id
 	    int nCurrentIterations = 0;
 
+        // step 2 正常迭代计算进行相机位姿估计，如果满足效果上限，直接返回最佳估计结果，否则就继续利用最小集(6个点)估计位姿
         // 进行迭代的条件:
         // 条件1: 历史进行的迭代次数少于最大迭代值
         // 条件2: 当前进行的迭代次数少于当前函数给定的最大迭代值
@@ -188,14 +189,17 @@ namespace ORB_SLAM3 {
             // 选取最小集
 	        for(short i = 0; i < mRansacMinSet; ++i)
 	        {
+	            // 在所有备选点中随机抽取一个，通过随机抽取索引数组vAvailableIndices的索引[randi]来实现
 	            int randi = DUtils::Random::RandomInt(0, vAvailableIndices.size()-1);
 
+	            // vAvailableIndices[randi]才是备选点真正的索引值，randi是索引数组的索引值，不要搞混了
 	            int idx = vAvailableIndices[randi];
 
                 bearingVecs[i] = mvBearingVecs[idx];
                 p3DS[i] = mvP3Dw[idx];
                 indexes[i] = i;
 
+                // 把抽取出来的点从所有备选点数组里删除掉
 	            vAvailableIndices[randi] = vAvailableIndices.back();
 	            vAvailableIndices.pop_back();
 	        } // 选取最小集
@@ -267,7 +271,9 @@ namespace ORB_SLAM3 {
 	        }
 	    } // 迭代
 
+	    // step 3 选择最小集中效果最好的相机位姿估计结果
 	    // 程序运行到这里，说明Refine失败了，说明精求解过程中，内点的个数不满足最小阈值，那就只能在当前结果中选择内点数最多的那个最小集
+	    // 但是也意味着这样子的结果最终是用6个点来求出来的，近似效果一般
 	    if(mnIterations>=mRansacMaxIts)
 	    {
 	        bNoMore=true;
@@ -284,6 +290,7 @@ namespace ORB_SLAM3 {
 	        }
 	    }
 
+	    // step 4 相机位姿估计失败，返回零值
 	    // 程序运行到这里，那说明没有满足条件的相机位姿估计结果，位姿估计失败了
 	    return cv::Mat();
 	}
@@ -459,16 +466,18 @@ namespace ORB_SLAM3 {
      */
     void MLPnPsolver::computePose(const bearingVectors_t &f, const points_t &p, const cov3_mats_t &covMats,
                                   const std::vector<int> &indices, transformation_t &result) {
-	    // 函数 assert 检验条件
-	    // 因为每个观测值会产生2个残差，所以至少需要5个点来计算公式12，所以要检验当前的点个数是否满足大于5的条件
+        // step 1: 判断点的数量是否满足计算条件，否则直接报错
+	    // 因为每个观测值会产生2个残差，所以至少需要6个点来计算公式12，所以要检验当前的点个数是否满足大于5的条件
         size_t numberCorrespondences = indices.size();
+        // 当numberCorrespondences不满足>5的条件时会发生错误
         assert(numberCorrespondences > 5);
 
         // 用来标记是否满足平面条件
         bool planar = false;
 
         // compute the nullspace of all vectors
-        // step1: 计算所有向量的零空间
+        // step 2: 计算点的单位向量的零空间
+        // 利用公式7 Jvr(v) = null(v^T) = [r s]
 
         // 给每个向量都开辟一个零空间，所以数量相等
         std::vector<Eigen::MatrixXd> nullspaces(numberCorrespondences);
@@ -492,9 +501,12 @@ namespace ORB_SLAM3 {
         //            |1 |
         points4_t points4v(numberCorrespondences);
 
-        //
+        // numberCorrespondences不等于所有点，而是提取出来的内点的数量，其作为连续索引值对indices进行索引
+        // 因为内点的索引并非连续，想要方便遍历，必须用连续的索引值，
+        // 所以就用了indices[i]嵌套形式，i表示内点数量numberCorrespondences范围内的连续形式
+        // indices里面保存的是不连续的内点的索引值
         for (size_t i = 0; i < numberCorrespondences; i++) {
-            // 当前空间点的单位向量
+            // 当前空间点的单位向量,indices[i]是当前点坐标和向量的索引值，
             bearingVector_t f_current = f[indices[i]];
 
             // 取出当前点记录到 points3 空间点矩阵里
@@ -507,7 +519,7 @@ namespace ORB_SLAM3 {
             Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::HouseholderQRPreconditioner>
                     svd_f(f_current.transpose(), Eigen::ComputeFullV);
 
-            // 取2个零特征值对应的2个特征向量
+            // 取特征值最小的那两个对应的2个特征向量
             //              |r1 s1|
             // nullspaces = |r2 s2|
             //              |r3 s3|
@@ -517,6 +529,8 @@ namespace ORB_SLAM3 {
             points3v[i] = p[indices[i]];
         }
 
+        // step 3: 通过计算S的秩来判断是在平面情况还是在正常情况
+        // 令S = M * M^T，其中M = [p1,p2,...,pi]，即 points3 空间点矩阵
         //////////////////////////////////////
         // 1. test if we have a planar scene
         // 在平面条件下，会产生4个解，因此需要另外判断和解决平面条件下的问题
@@ -560,6 +574,9 @@ namespace ORB_SLAM3 {
             for (size_t i = 0; i < numberCorrespondences; i++)
                 points3.col(i) = eigenRot * points3.col(i);
         }
+
+        // step 4: 计算随机模型中的协方差矩阵
+        // 但是作者并没有用到协方差信息
         //////////////////////////////////////
         // 2. stochastic model
         //////////////////////////////////////
@@ -587,6 +604,7 @@ namespace ORB_SLAM3 {
             }
         }
 
+        // step 5: 构造矩阵A来完成线性方程组的构建
         //////////////////////////////////////
         // 3. fill the design matrix A
         //////////////////////////////////////
@@ -601,6 +619,7 @@ namespace ORB_SLAM3 {
 
         // 如果世界点位于分别跨2个坐标轴的平面上，即所有世界点的一个元素是常数的时候，可简单地忽略矩阵A中对应的列
         // 而且这不影响问题的结构本身，所以在计算公式20： pi' = R_S^T * pi的时候，忽略了r11,r21,r31，即第一列
+        // 对应的u只有9个元素 u = [r12, r13, r22, r23, r32, r33, t1, t2, t3]^T 所以A的列个数是9个
         if (planar) {
             colsA = 9;
             A = Eigen::MatrixXd(rowsA, 9);
@@ -686,6 +705,7 @@ namespace ORB_SLAM3 {
             }
         }
 
+        // step 6: 计算线性方程组的最小二乘解
         //////////////////////////////////////
         // 4. solve least squares
         //////////////////////////////////////
@@ -703,6 +723,7 @@ namespace ORB_SLAM3 {
         // 解就是对应奇异值最小的列向量，即最后一列
         Eigen::MatrixXd result1 = svd_A.matrixV().col(colsA - 1);
 
+        // step 7: 根据平面和非平面情况下选择最终位姿解
         ////////////////////////////////
         // now we treat the results differently,
         // depending on the scene (planar or not)
@@ -921,6 +942,7 @@ namespace ORB_SLAM3 {
 
         }
 
+        // step 8: 利用高斯牛顿法对位姿进行精确求解，提高位姿解的精度
         //////////////////////////////////////
         // 5. gauss newton
         //////////////////////////////////////
@@ -943,11 +965,12 @@ namespace ORB_SLAM3 {
         // 利用高斯牛顿迭代法来提炼相机位姿 pose
         mlpnp_gn(minx, points3v, nullspaces, P, use_cov);
 
-        //
+        // 最终输出的结果
         Rout = rodrigues2rot(rodrigues_t(minx[0], minx[1], minx[2]));
         tout = translation_t(minx[3], minx[4], minx[5]);
 
         // result inverse as opengv uses this convention
+        // 这里是用来计算世界坐标系到相机坐标系的转换，所以是Pc=R^T*Pw-R^T*t，反变换
         result.block<3, 3>(0, 0) = Rout;//Rout.transpose();
         result.block<3, 1>(0, 3) = tout;//-result.block<3, 3>(0, 0) * tout;
     } // End of computerPose
@@ -1030,9 +1053,12 @@ namespace ORB_SLAM3 {
      */
     void MLPnPsolver::mlpnp_gn(Eigen::VectorXd &x, const points_t &pts, const std::vector<Eigen::MatrixXd> &nullspaces,
                                const Eigen::SparseMatrix<double> Kll, bool use_cov) {
+        // 计算观测值数量
         const int numObservations = pts.size();
+        // 未知量是旋转向量和平移向量，即R和t，总共6个未知参数
         const int numUnknowns = 6;
         // check redundancy
+        // 检查观测数量是否满足计算条件，因为每个观测值都提供了2个约束，即r和s，所以这里乘以2
         assert((2 * numObservations - numUnknowns) > 0);
 
         // =============
