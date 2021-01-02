@@ -1213,11 +1213,11 @@ namespace ORB_SLAM3 {
         // t14 = 1 / theta^2
         double t14 = 1.0 / t8;
         // t16 = sin(theta)/theta*w3
-        // 令 A = sin(theta)/theta
+        // 令 A = sin(theta)/theta = t10*t11
         // t16 = A*w3
         double t16 = t10 * t11 * w3;
         // t17 = (cos(theta) - 1)/theta^2 * w1 * w2
-        // 令 B = (cos(theta) - 1)/theta^2
+        // 令 B = (cos(theta) - 1)/theta^2 = t13*t14
         // t17 = B*w1*w2
         double t17 = t13 * t14 * w1 * w2;
         // t19 = sin(theta)/theta*w2
@@ -1312,24 +1312,30 @@ namespace ORB_SLAM3 {
         //     = 1 / theta^4
         double t26 = 1.0 / (t8 * t8);
         // t35 = t12 * t14 * w1 * w2 = cos(theta) / theta^2 * w1 * w2
+        // 令 cos(theta) / theta^2 = E = t12*t14
+        // t35 = E*w1*w2
         double t35 = t12 * t14 * w1 * w2;
         // t36 = t5 * t10 * t25 * w3 = w1^2 * sin(theta) / theta^3 * w3
+        // 令 sin(theta) / theta^3 = F = t10*t25
+        // t36 = F*w1^2*w3
         double t36 = t5 * t10 * t25 * w3;
         // t37 = t5 * t13 * t26 * w3 * 2.0 = w1^2 * (cos(theta) - 1) / theta^4 * w3
+        // 令 (cos(theta) - 1) / theta^4 = G = t13*t26
+        // t37 = G*w1^2*w3
         double t37 = t5 * t13 * t26 * w3 * 2.0;
-        // t46 = t10 * t25 * w1 * w3 = sin(theta) / theta^3 * w1 * w3
+        // t46 = t10 * t25 * w1 * w3 = sin(theta) / theta^3 * w1 * w3 = F*w1*w3
         double t46 = t10 * t25 * w1 * w3;
-        // t47 = t5 * t10 * t25 * w2 = w1^2 * sin(theta) / theta^3 * w2
+        // t47 = t5 * t10 * t25 * w2 = w1^2 * sin(theta) / theta^3 * w2 = F*w1^2*w2
         double t47 = t5 * t10 * t25 * w2;
-        // t48 = t5 * t13 * t26 * w2 * 2.0 = w1^2 * (cos(theta) - 1) / theta^4 * 2 * w2
+        // t48 = t5 * t13 * t26 * w2 * 2.0 = w1^2 * (cos(theta) - 1) / theta^4 * 2 * w2 = G*w1^2*w2
         double t48 = t5 * t13 * t26 * w2 * 2.0;
         // t49 = t10 * t11 = sin(theta) / theta = A
         double t49 = t10 * t11;
-        // t50 = t5 * t12 * t14 = w1^2 * cos(theta) / theta^2
+        // t50 = t5 * t12 * t14 = w1^2 * cos(theta) / theta^2 = E*w1^2
         double t50 = t5 * t12 * t14;
-        // t51 = t13 * t26 * w1 * w2 * w3 * 2.0 = (cos(theta) - 1) / theta^4 * w1 * w2 * w3 * 2
+        // t51 = t13 * t26 * w1 * w2 * w3 * 2.0 = (cos(theta) - 1) / theta^4 * w1 * w2 * w3 * 2 = 2*G*w1*w2*w3
         double t51 = t13 * t26 * w1 * w2 * w3 * 2.0;
-        // t52 = t10 * t25 * w1 * w2 * w3 = sin(theta) / theta^3 * w1 * w2 * w3
+        // t52 = t10 * t25 * w1 * w2 * w3 = sin(theta) / theta^3 * w1 * w2 * w3 = F*w1*w2*w3
         double t52 = t10 * t25 * w1 * w2 * w3;
         // t60 = t15 * t15 = (t1 + r11*X1 + r12*Y1 + r13*Z1)^2
         double t60 = t15 * t15;
@@ -1339,7 +1345,7 @@ namespace ORB_SLAM3 {
         double t62 = t23 * t23;
         // t63 = t60 + t61 + t62 = (t1 + r11*X1 + r12*Y1 + r13*Z1)^2 + (t2 + r21*X1 + r22*Y1 + r23*Z1)^2 + (t3 + r31*X1 + r32*Y1 + r33*Z1)^2
         double t63 = t60 + t61 + t62;
-        // t64 = t5 * t10 * t25 = w1^2 * sin(theta) / theta^3
+        // t64 = t5 * t10 * t25 = w1^2 * sin(theta) / theta^3 = F*w1^2
         double t64 = t5 * t10 * t25;
         // t65 = 1 / sqrt((t1 + r11*X1 + r12*Y1 + r13*Z1)^2 + (t2 + r21*X1 + r22*Y1 + r23*Z1)^2 + (t3 + r31*X1 + r32*Y1 + r33*Z1)^2)
         double t65 = 1.0 / sqrt(t63);
@@ -1430,54 +1436,84 @@ namespace ORB_SLAM3 {
                 t66 + t67 + t68 + t69 + t70 + t71 + t72 + t73 + t74 + t75 + t76 + t77 + t78 + t79 + t80 + t81 + t82 +
                 t83 + t84 + t85 + t86 + t87 + t88 + t89 + t90 + t91 + t92 - t102 - t103 - t104 - t105 - t106 - t107 -
                 t108 - t109 - t110;
-        // t94 = sin(theta)/theta^3* w1 * w2
+        // t94 = sin(theta)/theta^3* w1 * w2 = F*w1*w2
         double t94 = t10 * t25 * w1 * w2;
-        // t95 = w2^2*sin(theta)/theta^3*w3
+        // t95 = w2^2*sin(theta)/theta^3*w3 = F*w2^2*w3
         double t95 = t6 * t10 * t25 * w3;
-        // t96 = 2 * w2^2 * (cos(theta) - 1) / theta^4 * w3
+        // t96 = 2 * w2^2 * (cos(theta) - 1) / theta^4 * w3 = 2*G*w2^2*w3
         double t96 = t6 * t13 * t26 * w3 * 2.0;
-        // t97 = cos(theta) / theta^2 * w2 * w3
+        // t97 = cos(theta) / theta^2 * w2 * w3 = E*w2*w3
         double t97 = t12 * t14 * w2 * w3;
-        // t98 = w2^2 * sin(theta) / theta^3 * w1
+        // t98 = w2^2 * sin(theta) / theta^3 * w1 = F*w2^2*w1
         double t98 = t6 * t10 * t25 * w1;
-        // t99 = 2 * w2^2 * (cos(theta) - 1) / theta^4 * w1
+        // t99 = 2 * w2^2 * (cos(theta) - 1) / theta^4 * w1 = 2*G*w2^2*w1
         double t99 = t6 * t13 * t26 * w1 * 2.0;
-        // t100 = w2^2 * sin(theta) / theta^3
+        // t100 = w2^2 * sin(theta) / theta^3 = F*w2^2
         double t100 = t6 * t10 * t25;
         // t101 = 1.0 / pow(sqrt((t1 + r11*X1 + r12*Y1 + r13*Z1)^2 + (t2 + r21*X1 + r22*Y1 + r23*Z1)^2 + (t3 + r31*X1 + r32*Y1 + r33*Z1)^2), 3.0 / 2.0)
         //      = (t1 + r11*X1 + r12*Y1 + r13*Z1)^2 + (t2 + r21*X1 + r22*Y1 + r23*Z1)^2 + (t3 + r31*X1 + r32*Y1 + r33*Z1)^3
         double t101 = 1.0 / pow(t63, 3.0 / 2.0);
-        // t111 = w2^2 * cos(theta) / theta^2
+        // t111 = w2^2 * cos(theta) / theta^2 = E*w2^2
         double t111 = t6 * t12 * t14;
-
+        // t112 = sin(theta) / theta^3 *w2 * w3 = F*w2*w3
         double t112 = t10 * t25 * w2 * w3;
+        // t113 = cos(theta) / theta^2 * w1 * w3 = E*w1*w3
         double t113 = t12 * t14 * w1 * w3;
+        // t114 = w3^2 * sin(theta) / theta^3 * w2 = F*w3^2*w2
         double t114 = t7 * t10 * t25 * w2;
+        // t115 = t7 * t13 * t26 * w2 * 2.0 = 2*w3^2*(cos(theta) - 1) / theta^4*w2
         double t115 = t7 * t13 * t26 * w2 * 2.0;
+        // t116 = w3^2 * sin(theta) / theta^3 * w1 = F*w3^2*w1
         double t116 = t7 * t10 * t25 * w1;
+        // t117 = 2 * w3^2 * (cos(theta) - 1) / theta^4 * w1 = 2*G*w3^2*w1
         double t117 = t7 * t13 * t26 * w1 * 2.0;
+        // t118 = E*w3^2
         double t118 = t7 * t12 * t14;
+        // t119 = 2*w1*G*(w2^2+w3^2)
         double t119 = t13 * t24 * t26 * w1 * 2.0;
+        // t120 = F*w1*(w2^2+w3^2)
         double t120 = t10 * t24 * t25 * w1;
+        // t121 = (2*G+F)*w1*(w2^2+w3^2)
         double t121 = t119 + t120;
+        // t122 = 2*G*w1*(w1^2+w2^2)
         double t122 = t13 * t26 * t34 * w1 * 2.0;
+        // t123 = F*w1*(w1^2+w2^2)
         double t123 = t10 * t25 * t34 * w1;
+        // t131 = 2*(cos(theta) - 1) / theta^2*w1 = 2*B*w1
         double t131 = t13 * t14 * w1 * 2.0;
+        // t124 = t122 + t123 - t131 = 2*G*w1*(w1^2+w2^2)+F*w1*(w1^2+w2^2)-2*B*w1
+        //      = (2*G+F)*w1*(w1^2+w2^2)-2*B*w1
         double t124 = t122 + t123 - t131;
+        // t139 = t13 * t14 * w3 = B*w3
         double t139 = t13 * t14 * w3;
+        // t125 = -t35 + t36 + t37 + t94 - t139 = -E*w1*w2+F*w1^2*w3+G*w1^2*w3+F*w1*w2-B*w3
         double t125 = -t35 + t36 + t37 + t94 - t139;
+        // t126 = (-E*w1*w2+F*w1^2*w3+G*w1^2*w3+F*w1*w2-B*w3)*X1
         double t126 = X1 * t125;
+        // t127 = t49 + t50 + t51 + t52 - t64 = A + E*w1^2 + (2*G+F)*w1*w2*w3 - F*w1^2
         double t127 = t49 + t50 + t51 + t52 - t64;
+        // t128 = (A + E*w1^2 + (2*G+F)*w1*w2*w3 - F*w1^2)*Y1
         double t128 = Y1 * t127;
+        // t129 = (-E*w1*w2+F*w1^2*w3+G*w1^2*w3+F*w1*w2-B*w3)*X1 + (A + E*w1^2 + (2*G+F)*w1*w2*w3 - F*w1^2)*Y1 - ((2*G+F)*w1*(w1^2+w2^2)-2*B*w1)Z1
         double t129 = t126 + t128 - Z1 * t124;
+        // t130 = 2 * (t3 + r31*X1 + r32*Y1 + r33*Z1)
+        //          * ((-E*w1*w2+F*w1^2*w3+G*w1^2*w3+F*w1*w2-B*w3)*X1 + (A + E*w1^2 + (2*G+F)*w1*w2*w3 - F*w1^2)*Y1 - ((2*G+F)*w1*(w1^2+w2^2)-2*B*w1)Z1)
         double t130 = t23 * t129 * 2.0;
+        // t132 = t13 * t26 * t45 * w1 * 2.0 = 2*w1*G*(w1^2+w3^2)
         double t132 = t13 * t26 * t45 * w1 * 2.0;
+        // t133 = t10 * t25 * t45 * w1 = F*w1*(w1^2+w3^2)
         double t133 = t10 * t25 * t45 * w1;
+        // t138 = t13 * t14 * w2 = B*w2
         double t138 = t13 * t14 * w2;
+        // t134 = -t46 + t47 + t48 + t113 - t138 = -F*w1*w3+F*w1^2*w2+G*w1^2*w2+E*w1*w3-B*w2
         double t134 = -t46 + t47 + t48 + t113 - t138;
+        // t135 = (-F*w1*w3+F*w1^2*w2+G*w1^2*w2+E*w1*w3-B*w2)*X1
         double t135 = X1 * t134;
+        // t136 = -t49 - t50 + t51 + t52 + t64 = -A-E*w1^2+2*G*w1*w2*w3+F*w1*w2*w3+F*w1^2
         double t136 = -t49 - t50 + t51 + t52 + t64;
+        // t137 = (-A-E*w1^2+2*G*w1*w2*w3+F*w1*w2*w3+F*w1^2)*Z1
         double t137 = Z1 * t136;
+
         double t140 = X1 * s1 * t5;
         double t141 = Y1 * s2 * t6;
         double t142 = Z1 * s3 * t7;
@@ -1496,55 +1532,103 @@ namespace ORB_SLAM3 {
         double t155 = Y1 * s3 * w2 * w3;
         double t156 = Z1 * s1 * w1 * w3;
         double t157 = Z1 * s2 * w2 * w3;
+        // t12 = cos(theta)
         double t158 = X1 * s1 * t6 * t12;
         double t159 = X1 * s1 * t7 * t12;
         double t160 = Y1 * s2 * t5 * t12;
         double t161 = Y1 * s2 * t7 * t12;
         double t162 = Z1 * s3 * t5 * t12;
         double t163 = Z1 * s3 * t6 * t12;
+        // t9 = theta, t10 = sin(theta)
         double t164 = X1 * s2 * t9 * t10 * w3;
         double t165 = Y1 * s3 * t9 * t10 * w1;
         double t166 = Z1 * s1 * t9 * t10 * w2;
         double t183 = X1 * s3 * t9 * t10 * w2;
         double t184 = Y1 * s1 * t9 * t10 * w3;
         double t185 = Z1 * s2 * t9 * t10 * w1;
+        // t12 = cos(theta)
         double t186 = X1 * s2 * t12 * w1 * w2;
         double t187 = X1 * s3 * t12 * w1 * w3;
         double t188 = Y1 * s1 * t12 * w1 * w2;
         double t189 = Y1 * s3 * t12 * w2 * w3;
         double t190 = Z1 * s1 * t12 * w1 * w3;
         double t191 = Z1 * s2 * t12 * w2 * w3;
+        // t167 = t140 + t141 + t142 + t143 + t144
+        //      + t145 + t146 + t147 + t148 + t149
+        //      + t150 + t151 + t152 + t153 + t154
+        //      + t155 + t156 + t157 + t158 + t159
+        //      + t160 + t161 + t162 + t163 + t164
+        //      + t165 + t166 - t183 - t184 - t185
+        //      - t186 - t187 - t188
+        //      - t189 - t190 - t191
+        //
+        //      =   (X1 * s1 * t5) + (Y1 * s2 * t6) + (Z1 * s3 * t7) + (s1 * t1 * t5) + (s1 * t1 * t6)
+        //        + (s1 * t1 * t7) + (s2 * t2 * t5) + (s2 * t2 * t6) + (s2 * t2 * t7) + (s3 * t3 * t5)
+        //        + (s3 * t3 * t6) + (s3 * t3 * t7) + (X1 * s2 * w1 * w2) + (X1 * s3 * w1 * w3) + (Y1 * s1 * w1 * w2)
+        //        + (Y1 * s3 * w2 * w3) + (Z1 * s1 * w1 * w3) + (Z1 * s2 * w2 * w3) + (X1 * s1 * t6 * t12) + (X1 * s1 * t7 * t12)
+        //        + (Y1 * s2 * t5 * t12) + (Y1 * s2 * t7 * t12) + (Z1 * s3 * t5 * t12) + (Z1 * s3 * t6 * t12) + (X1 * s2 * t9 * t10 * w3)
+        //        + (Y1 * s3 * t9 * t10 * w1) + (Z1 * s1 * t9 * t10 * w2) - (X1 * s3 * t9 * t10 * w2) - (Y1 * s1 * t9 * t10 * w3) - (Z1 * s2 * t9 * t10 * w1)
+        //        - (X1 * s2 * t12 * w1 * w2) - (X1 * s3 * t12 * w1 * w3) - (Y1 * s1 * t12 * w1 * w2)
+        //        - (Y1 * s3 * t12 * w2 * w3) - (Z1 * s1 * t12 * w1 * w3) - (Z1 * s2 * t12 * w2 * w3)
         double t167 =
                 t140 + t141 + t142 + t143 + t144 + t145 + t146 + t147 + t148 + t149 + t150 + t151 + t152 + t153 + t154 +
                 t155 + t156 + t157 + t158 + t159 + t160 + t161 + t162 + t163 + t164 + t165 + t166 - t183 - t184 - t185 -
                 t186 - t187 - t188 - t189 - t190 - t191;
+        // t168 = t13 * t26 * t45 * w2 * 2.0 = 2*G*w2*(w1^2+w3^2)
         double t168 = t13 * t26 * t45 * w2 * 2.0;
+        // t169 = t10 * t25 * t45 * w2 = F*w2*(w1^2+w3^2)
         double t169 = t10 * t25 * t45 * w2;
+        // t170 = t168 + t169 = (2*G+F)*w2*(w1^2+w3^2)
         double t170 = t168 + t169;
+        // t171 = t13 * t26 * t34 * w2 * 2.0 = 2*G*w2*(w1^2+w2^2)
         double t171 = t13 * t26 * t34 * w2 * 2.0;
+        // t172 = t10 * t25 * t34 * w2 = F*w2*(w1^2+w2^2)
         double t172 = t10 * t25 * t34 * w2;
+        // t176 = t13 * t14 * w2 * 2.0 = 2*B*w2
         double t176 = t13 * t14 * w2 * 2.0;
+        // t173 = t171 + t172 - t176 = (2*G+F)*w2*(w1^2+w2^2) - 2*B*w2
         double t173 = t171 + t172 - t176;
+        // t174 = -t49 + t51 + t52 + t100 - t111 = -A+2*G*w1*w2*w3+F*w1*w2*w3+F*w2^2-E*w2^2
         double t174 = -t49 + t51 + t52 + t100 - t111;
+        // t175 = X1 * t174 = (-A+2*G*w1*w2*w3+F*w1*w2*w3+F*w2^2-E*w2^2)*X1
         double t175 = X1 * t174;
+        // t177 = t13 * t24 * t26 * w2 * 2.0 = 2*w2*G*(w2^2+w3^2)
         double t177 = t13 * t24 * t26 * w2 * 2.0;
+        // t178 = t10 * t24 * t25 * w2 = F*w2*(w2^2+w3^2)
         double t178 = t10 * t24 * t25 * w2;
+        // t192 = t13 * t14 * w1 = B*w1
         double t192 = t13 * t14 * w1;
+        // t179 = -t97 + t98 + t99 + t112 - t192 = -E*w2*w3+F*w2^2*w1+2*G*w2^2*w1+F*w2*w3-B*w1
         double t179 = -t97 + t98 + t99 + t112 - t192;
+        // t180 = (-E*w2*w3+F*w2^2*w1+2*G*w2^2*w1+F*w2*w3-B*w1)*Y1
         double t180 = Y1 * t179;
+        // t181 = A+2*G*w1*w2*w3+F*w1*w2*w3-F*w2^2+E*w2^2
         double t181 = t49 + t51 + t52 - t100 + t111;
+        // t182 = (A+2*G*w1*w2*w3+F*w1*w2*w3-F*w2^2+E*w2^2)*Z1
         double t182 = Z1 * t181;
+        // t193 = 2*G*w3*(w2^2+w3^2)
         double t193 = t13 * t26 * t34 * w3 * 2.0;
+        // t194 = F*w3*(w2^2+w3^2)
         double t194 = t10 * t25 * t34 * w3;
+        // t195 = (2*G+F)*w3*(w2^2+w3^2)
         double t195 = t193 + t194;
+        // t196 = 2*G*w3*(w1^2+w3^2)
         double t196 = t13 * t26 * t45 * w3 * 2.0;
+        // t197 = F*w3*(w1^2+w3^2)
         double t197 = t10 * t25 * t45 * w3;
+        // t200 = 2*B*w3
         double t200 = t13 * t14 * w3 * 2.0;
+        // t198 = (2*G+F)*w3*(w1^2+w3^2) - 2*B*w3
         double t198 = t196 + t197 - t200;
+        // t199 = F*w3^2
         double t199 = t7 * t10 * t25;
+        // t201 = 2*w3*G*(w2^2+w3^2)
         double t201 = t13 * t24 * t26 * w3 * 2.0;
+        // t202 = F*w3*(w2^2+w3^2)
         double t202 = t10 * t24 * t25 * w3;
+        // t203 = -t49 + t51 + t52 - t118 + t199 = -A+2*G*w1*w2*w3+F*w1*w2*w3-E*w3^2+F*w3^2
         double t203 = -t49 + t51 + t52 - t118 + t199;
+        // t204 = (-t49 + t51 + t52 - t118 + t199 = -A+2*G*w1*w2*w3+F*w1*w2*w3-E*w3^2+F*w3^2)*Y1
         double t204 = Y1 * t203;
         // t205 = 2*t1
         double t205 = t1 * 2.0;
