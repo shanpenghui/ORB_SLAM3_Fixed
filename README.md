@@ -2,21 +2,17 @@
 The raw address:
 https://github.com/UZ-SLAMLab/ORB_SLAM3
 
-详见：
+Reference article 参考文章：
 >EVO Evaluation of SLAM 4 --- ORB-SLAM3 编译和利用数据集运行
 >https://blog.csdn.net/shanpenghui/article/details/109354918
-
 
 >EVO Evaluation of SLAM 5 --- ORB-SLAM3 精度和性能效果评估
 >https://blog.csdn.net/shanpenghui/article/details/109361766
 
-
-Before running, you should install Pangolin
+## 一、Install Third Party
+Pangolin:
 ```
-https://github.com/stevenlovegrove/Pangolin.git
-```
-
-```
+git clone https://github.com/stevenlovegrove/Pangolin.git
 sudo apt install libglew-dev
 cd Pangolin
 mkdir build
@@ -25,9 +21,7 @@ cmake ..
 make -j 4
 sudo make install
 ```
-
-google log:
-
+Googlelog:
 ```
 git clone https://github.com/google/glog
 cd glog
@@ -38,15 +32,14 @@ cd build
 sudo make install
 ```
 
-### Build ORB-SLAM3:
+## 二、Build ORB-SLAM3:
 Work in shells path
 ```
 cd shells
 ./build.sh
-
 ```
 
-### Run ORB-SLAM3:
+## 三、Run ORB-SLAM3 in shell
 Before running, you should change the path in tum_vi.sh where you save the dataset, such as:
 ```
 pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
@@ -57,9 +50,27 @@ Work in shells path
 cd shells
 ./tum_vi.sh
 ```
+## 四、Run ORB-SLAM3 in ros
+Build ros version
+```
+cd shells
+./build_ros.sh
+```
+Set ROS_PACKAGE_PATH:
+```c++
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/home/sph/Documents/ORB_SLAM3_Fixed/Examples/ROS
+```
+Run ros-version ORB-SLAM3 in root path:
+```
+cd ORB_SLAM3_Fixed
+rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml
+```
 
-要注意的是,目前只有单目带IMU的被激活,里面的配置需要自己对应自己的电脑更新
+## 五、注意:
 
+### 1.目前只有单目带IMU的被激活,里面的配置需要对应自己的电脑更新
+
+### 2.原版出现的错误(因为本工程是在ORB3刚开放的时候就建立了，所以有些问题应该被作者修复了，如果有遗漏或冗余请读者自行忽略)
 原版ros的编译会出现ORBSLAM2的错误
 ```
 error: ‘ORB_SLAM2’ has not been declared
@@ -80,24 +91,10 @@ fatal error: GeometricCamera.h: No such file or directory #include "GeometricCam
 ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
 ```
 
-### Run ORB-SLAM3 in ros
-Build ros version
-```
-cd shells
-./build_ros.sh
-```
-Set ROS_PACKAGE_PATH:
-```c++
-export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/home/sph/Documents/ORB_SLAM3_Fixed/Examples/ROS
-```
-Run ros-version ORB-SLAM3 in root path:
-```
-cd ORB_SLAM3_Fixed
-rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml
-```
+## 六、Use usb_cam to run camera_node
 But!!!! You can`t run ORB-SLAM3 without run the camera_node!!!!
 So, if you want to test ros-version, just use your computer camera(wish you have)
-### Use usb_cam to run camera_node
+
 ```
 git clone https://github.com/bosch-ros-pkg/usb_cam.git
 ```
@@ -110,7 +107,7 @@ ros::Subscriber sub = nodeHandler.subscribe("/usb_cam/image_raw", 1, &ImageGrabb
 
 After the steps up, it work finally!
 
-##### A problem
+#### 利用自己相机模块可能出现的问题
 When I first run it, error come out:
 ```
 Failed to load module "canberra-gtk-module"
@@ -120,8 +117,14 @@ To solve this problem, install the module:
 sudo apt-get install libcanberra-gtk-module
 ```
 
-### V0.2: Beta version, 21 Jul 2020
+--------------------------------------------------
+--------------------------------------------------
+# ORB-SLAM3
+
+### V0.3: Beta version, 4 Sep 2020
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
+
+The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/Changelog.md) describes the features of each version.
 
 ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate. 
 
@@ -130,7 +133,7 @@ We provide examples to run ORB-SLAM3 in the [EuRoC dataset](http://projects.asl.
 This software is based on [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2) developed by [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2)).
 
 <a href="https://youtu.be/HyLNq-98LRo" target="_blank"><img src="https://img.youtube.com/vi/HyLNq-98LRo/0.jpg" 
-alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
+alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
 
 ### Related Publications:
 
@@ -190,6 +193,10 @@ Required to calculate the alignment of the trajectory with the ground truth. **R
 * (deb) `sudo apt install libpython2.7-dev`
 * (mac) preinstalled with osx
 
+## ROS (optional)
+
+We provide some examples to process input of a monocular, monocular-inertial, stereo, stereo-inertial or RGB-D camera using ROS. Building these examples is optional. These have been tested with ROS Melodic under Ubuntu 18.04.
+
 # 3. Building ORB-SLAM3 library and examples
 
 Clone the repository:
@@ -246,3 +253,79 @@ Execute the following script to process sequences and compute the RMS ATE:
 ./tum_vi_eval_examples
 ```
 
+# 6. ROS Examples
+
+### Building the nodes for mono, mono-inertial, stereo, stereo-inertial and RGB-D
+Tested with ROS Melodic and ubuntu 18.04.
+
+1. Add the path including *Examples/ROS/ORB_SLAM3* to the ROS_PACKAGE_PATH environment variable. Open .bashrc file:
+  ```
+  gedit ~/.bashrc
+  ```
+and add at the end the following line. Replace PATH by the folder where you cloned ORB_SLAM3:
+
+  ```
+  export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:PATH/ORB_SLAM3/Examples/ROS
+  ```
+  
+2. Execute `build_ros.sh` script:
+
+  ```
+  chmod +x build_ros.sh
+  ./build_ros.sh
+  ```
+  
+### Running Monocular Node
+For a monocular input from topic `/camera/image_raw` run node ORB_SLAM3/Mono. You will need to provide the vocabulary file and a settings file. See the monocular examples above.
+
+  ```
+  rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
+  ```
+
+### Running Monocular-Inertial Node
+For a monocular input from topic `/camera/image_raw` and an inertial input from topic `/imu`, run node ORB_SLAM3/Mono_Inertial. Setting the optional third argument to true will apply CLAHE equalization to images (Mainly for TUM-VI dataset).
+
+  ```
+  rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE [EQUALIZATION]	
+  ```
+
+### Running Stereo Node
+For a stereo input from topic `/camera/left/image_raw` and `/camera/right/image_raw` run node ORB_SLAM3/Stereo. You will need to provide the vocabulary file and a settings file. For Pinhole camera model, if you **provide rectification matrices** (see Examples/Stereo/EuRoC.yaml example), the node will recitify the images online, **otherwise images must be pre-rectified**. For FishEye camera model, rectification is not required since system works with original images:
+
+  ```
+  rosrun ORB_SLAM3 Stereo PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION
+  ```
+
+### Running Stereo-Inertial Node
+For a stereo input from topics `/camera/left/image_raw` and `/camera/right/image_raw`, and an inertial input from topic `/imu`, run node ORB_SLAM3/Stereo_Inertial. You will need to provide the vocabulary file and a settings file, including rectification matrices if required in a similar way to Stereo case:
+
+  ```
+  rosrun ORB_SLAM3 Stereo_Inertial PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION [EQUALIZATION]	
+  ```
+  
+### Running RGB_D Node
+For an RGB-D input from topics `/camera/rgb/image_raw` and `/camera/depth_registered/image_raw`, run node ORB_SLAM3/RGBD. You will need to provide the vocabulary file and a settings file. See the RGB-D example above.
+
+  ```
+  rosrun ORB_SLAM3 RGBD PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
+  ```
+
+**Running ROS example:** Download a rosbag (e.g. V1_02_medium.bag) from the EuRoC dataset (http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Open 3 tabs on the terminal and run the following command at each tab for a Stereo-Inertial configuration:
+  ```
+  roscore
+  ```
+  
+  ```
+  rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/EuRoC.yaml true
+  ```
+  
+  ```
+  rosbag play --pause V1_02_medium.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw /imu0:=/imu
+  ```
+  
+Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
+
+**Remark:** For rosbags from TUM-VI dataset, some play issue may appear due to chunk size. One possible solution is to rebag them with the default chunk size, for example:
+  ```
+  rosrun rosbag fastrebag.py dataset-room1_512_16.bag dataset-room1_512_16_small_chunks.bag
+  ```
