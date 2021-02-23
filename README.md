@@ -18,9 +18,7 @@ Pangolin:
 ```
 git clone https://github.com/stevenlovegrove/Pangolin.git
 sudo apt install libglew-dev
-cd Pangolin
-mkdir build
-cd build
+cd Pangolin && mkdir build && cd build
 cmake ..
 make -j 4
 sudo make install
@@ -35,6 +33,18 @@ cmake --build build --target test
 cd build
 sudo make install
 ```
+OpenCV:
+```
+git clone https://github.com/opencv/opencv.git
+cd opencv
+git checkout 4.5.1
+(or checkout the version you want)
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
+````
+
 
 ## 二、Build ORB-SLAM3:
 Work in shells path
