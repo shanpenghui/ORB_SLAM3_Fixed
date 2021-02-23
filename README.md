@@ -15,7 +15,7 @@ Reference article 参考文章：
 
 ## 一、Install Third Party
 Pangolin:
-```
+```shell script
 git clone https://github.com/stevenlovegrove/Pangolin.git
 sudo apt install libglew-dev
 cd Pangolin && mkdir build && cd build
@@ -24,7 +24,7 @@ make -j 4
 sudo make install
 ```
 Googlelog:
-```
+```shell script
 git clone https://github.com/google/glog
 cd glog
 cmake -H. -Bbuild -G "Unix Makefiles"
@@ -34,7 +34,7 @@ cd build
 sudo make install
 ```
 OpenCV:
-```
+```shell script
 git clone https://github.com/opencv/opencv.git
 cd opencv
 git checkout 4.5.1
@@ -47,35 +47,39 @@ sudo make install
 
 
 ## 二、Build ORB-SLAM3:
-Work in shells path
-```
+Work in shells path, continue the operation upon:
+```shell script
 cd shells
 ./build.sh
 ```
 
 ## 三、Run ORB-SLAM3 in shell
 Before running, you should change the path in tum_vi.sh where you save the dataset, such as:
-```
+```shell script
 pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
 ```
 
+**Remember to unzip the ORBvoc.txt.tar.gz into Vocabulary folder!!!**
+
 Work in shells path
-```
+```shell script
 cd shells
 ./tum_vi.sh
+or 
+./euroc.sh
 ```
 ## 四、Run ORB-SLAM3 in ros
 Build ros version
-```
+```shell script
 cd shells
 ./build_ros.sh
 ```
 Set ROS_PACKAGE_PATH:
-```c++
+```shell script
 export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/home/sph/Documents/ORB_SLAM3_Fixed/Examples/ROS
 ```
 Run ros-version ORB-SLAM3 in root path:
-```
+```shell script
 cd ORB_SLAM3_Fixed
 rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml
 ```
@@ -86,22 +90,22 @@ rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.
 
 ### 2.原版出现的错误(因为本工程是在ORB3刚开放的时候就建立了，所以有些问题应该被作者修复了，如果有遗漏或冗余请读者自行忽略)
 原版ros的编译会出现ORBSLAM2的错误
-```
+```C++
 error: ‘ORB_SLAM2’ has not been declared
      ImageGrabber(ORB_SLAM2::System* pSLAM):mpSLAM(pSLAM){}
 ```
 
 需要用指令修复：
-```
+```shell script
 sed -i "s/ORB_SLAM2/ORB_SLAM3/g" `grep -rl "ORB_SLAM2"`
 ```
 
 原版ros的编译也有可能出现找不到文件的错误:
-```
+```C++
 fatal error: GeometricCamera.h: No such file or directory #include "GeometricCamera.h"
 ```
 需要在CMakeList添加文件路径:
-```
+```shell script
 ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
 ```
 
@@ -109,13 +113,13 @@ ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
 But!!!! You can`t run ORB-SLAM3 without run the camera_node!!!!
 So, if you want to test ros-version, just use your computer camera(wish you have)
 
-```
+```shell script
 git clone https://github.com/bosch-ros-pkg/usb_cam.git
 ```
 Build and launch it, so you can see the /usb_cam/image_raw in rostopic.
 But, that is not enough!!!!!
 You should change the rostopic name in ORB-SLAM3, which is in Line 62, ros_mono.cc
-```
+```C++
 ros::Subscriber sub = nodeHandler.subscribe("/usb_cam/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 ```
 
@@ -123,11 +127,11 @@ After the steps up, it work finally!
 
 #### 利用自己相机模块可能出现的问题
 When I first run it, error come out:
-```
+```C++
 Failed to load module "canberra-gtk-module"
 ```
 To solve this problem, install the module:
-```
+```shell script
 sudo apt-get install libcanberra-gtk-module
 ```
 
