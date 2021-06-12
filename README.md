@@ -14,15 +14,17 @@ Reference article 参考文章：
 ## 新增了RGBD运行shell
 
 ## 一、Install Third Party
+
 Pangolin:
 ```shell script
 git clone https://github.com/stevenlovegrove/Pangolin.git
 sudo apt install libglew-dev
 cd Pangolin && mkdir build && cd build
 cmake ..
-make -j 4
+make -j 32
 sudo make install
 ```
+
 Googlelog:
 ```shell script
 git clone https://github.com/google/glog
@@ -48,6 +50,21 @@ make -j4
 sudo make install
 ```
 
+
+OpenCV:
+```
+git clone https://github.com/opencv/opencv
+cd opencv
+mkdir build
+cd build
+cmake ..
+make -j 32
+sudo make install
+```
+
+ippicv_2020_lnx_intel64_20191018_general.tgz 下载地址：
+链接: https://pan.baidu.com/s/1XwhaDnTaCxAIpmZCRijYvg 
+提取码: rq4r
 
 ## 二、Build ORB-SLAM3:
 Work in shells path, continue the operation upon:
