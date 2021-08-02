@@ -1115,6 +1115,7 @@ void Tracking::PreintegrateIMU()
 {
     //cout << "start preintegration" << endl;
 
+    // 检查是否存在上一帧，存在才有预积分的必要，否则不需要预积分
     if(!mCurrentFrame.mpPrevFrame)
     {
         Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
@@ -1124,7 +1125,9 @@ void Tracking::PreintegrateIMU()
 
     // cout << "start loop. Total meas:" << mlQueueImuData.size() << endl;
 
+    // 清理上一帧的预积分数据
     mvImuFromLastFrame.clear();
+    // 有多少个Imu数据就开多少帧，因为每个Imu数据都有位姿
     mvImuFromLastFrame.reserve(mlQueueImuData.size());
     if(mlQueueImuData.size() == 0)
     {
@@ -1138,19 +1141,25 @@ void Tracking::PreintegrateIMU()
         bool bSleep = false;
         {
             unique_lock<mutex> lock(mMutexImuQueue);
+            // Imu 还有数据的情况下继续循环
             if(!mlQueueImuData.empty())
             {
+            	// 按时间顺序取最旧到最新的Imu数据
                 IMU::Point* m = &mlQueueImuData.front();
                 cout.precision(17);
+                // 如果Imu数据和[上一帧]图像的时间戳相差不到0.001s的话，则不需要取，直接抛弃，因为太近了容易产生误差
                 if(m->t<mCurrentFrame.mpPrevFrame->mTimeStamp-0.001l)
                 {
                     mlQueueImuData.pop_front();
                 }
+                // 如果Imu数据的时间戳范围是在 [上一帧图像时间戳+0.001s] ~ [当前图像时间戳-0.0001s]
+                // 则属于有效范围，可以用来预积分
                 else if(m->t<mCurrentFrame.mTimeStamp-0.001l)
                 {
                     mvImuFromLastFrame.push_back(*m);
                     mlQueueImuData.pop_front();
                 }
+                // 其他范围则不是有效数据，直接采用第一个数据后退出循环
                 else
                 {
                     mvImuFromLastFrame.push_back(*m);
@@ -1167,16 +1176,19 @@ void Tracking::PreintegrateIMU()
             usleep(500);
     }
 
-
+	// 利用上一帧的 Imu Bias 和 当前帧的 Imu Calibration 构造 Imu 预积分观察变量，然后逐个Imu数据进行预积分
     const int n = mvImuFromLastFrame.size()-1;
     IMU::Preintegrated* pImuPreintegratedFromLastFrame = new IMU::Preintegrated(mLastFrame.mImuBias,mCurrentFrame.mImuCalib);
 
+    // 采用中值积分方法，即两个相邻时刻的位姿是用两个时刻的测量值a和w的平均值来计算
     for(int i=0; i<n; i++)
     {
         float tstep;
         cv::Point3f acc, angVel;
         if((i==0) && (i<(n-1)))
         {
+        	// 因为是第一帧，[上一帧图像的时间戳] 和 [上一帧Imu数据的时间戳] 是不一样的，一个表示预积分时间，一个表示Imu测量时间
+        	// 这里需要精准地计算预积分测量过程时间，则应把实际预积分的时间 / Imu测量时间，这样才是真正预积分用的平均值
             float tab = mvImuFromLastFrame[i+1].t-mvImuFromLastFrame[i].t;
             float tini = mvImuFromLastFrame[i].t-mCurrentFrame.mpPrevFrame->mTimeStamp;
             acc = (mvImuFromLastFrame[i].a+mvImuFromLastFrame[i+1].a-
@@ -1187,6 +1199,7 @@ void Tracking::PreintegrateIMU()
         }
         else if(i<(n-1))
         {
+        	// 这里实际预积分的时间和Imu测量时间是一样的，整个过程是重合的
             acc = (mvImuFromLastFrame[i].a+mvImuFromLastFrame[i+1].a)*0.5f;
             angVel = (mvImuFromLastFrame[i].w+mvImuFromLastFrame[i+1].w)*0.5f;
             tstep = mvImuFromLastFrame[i+1].t-mvImuFromLastFrame[i].t;
@@ -1208,8 +1221,10 @@ void Tracking::PreintegrateIMU()
             tstep = mCurrentFrame.mTimeStamp-mCurrentFrame.mpPrevFrame->mTimeStamp;
         }
 
+        // 如果上一帧预积分帧为空，则打印信息，TODO:貌似没什么用
         if (!mpImuPreintegratedFromLastKF)
             cout << "mpImuPreintegratedFromLastKF does not exist" << endl;
+        // TODO:上一句既然检测了上一帧预积分帧的合法性，为什么不把这句话放在if条件下，这样做岂不是有bug
         mpImuPreintegratedFromLastKF->IntegrateNewMeasurement(acc,angVel,tstep);
         pImuPreintegratedFromLastFrame->IntegrateNewMeasurement(acc,angVel,tstep);
     }
@@ -1393,13 +1408,17 @@ void Tracking::Track()
     mTime_NewKF_Dec = 0;
 #endif
 
+    // 如果是一步步执行的话，viewer 利用 mbStep = false 来控制程序执行
+    // 程序运行到这里的时候就不执行，直到点击了下一步，然后才跳过while循环继续执行
     if (bStepByStep)
     {
         while(!mbStep)
             usleep(500);
         mbStep = false;
     }
-
+	// LocalMapping 线程中的 Run 函数会循环不断地检测 Imu 的数据是否可以一直形成有效运动模型
+	// 当 Imu 的数据不足够形成有效运动模型的时候则认为当前 Imu 数据不可用，mbBadImu = true
+	// 不过是在没有新的关键帧生成、系统没有停止、地图中关键帧数量大于2、系统使用Imu数据、Imu已经完成初始化、时间间隔小于10s、当前关键帧和上以关键帧的相机光心距离小于2cm的情况下，才重置地图
     if(mpLocalMapper->mbBadImu)
     {
         cout << "TRACK: Reset map because local mapper set the bad imu flag " << endl;
@@ -1407,6 +1426,7 @@ void Tracking::Track()
         return;
     }
 
+    // 经过上述检验条件，程序运行到这里说明地图没什么问题，使用当前地图
     Map* pCurrentMap = mpAtlas->GetCurrentMap();
 
     if(mState!=NO_IMAGES_YET)
@@ -1419,6 +1439,7 @@ void Tracking::Track()
             CreateMapInAtlas();
             return;
         }
+        // 如果图像数据中存在时间戳跳变1s以上，则需要判断是否重置Active地图还是重新创建地图
         else if(mCurrentFrame.mTimeStamp>mLastFrame.mTimeStamp+1.0)
         {
             cout << "id last: " << mLastFrame.mnId << "    id curr: " << mCurrentFrame.mnId << endl;
@@ -1430,10 +1451,12 @@ void Tracking::Track()
                     cout << "Timestamp jump detected. State set to LOST. Reseting IMU integration..." << endl;
                     if(!pCurrentMap->GetIniertialBA2())
                     {
+                    	// 当地图使用Imu并且Imu初始化过的时候，如果发现15s间隔的Imu积分标志位还是false，则重置Active地图
                         mpSystem->ResetActiveMap();
                     }
                     else
                     {
+                    	// 否则就说明Imu还有效，创建新的地图
                         CreateMapInAtlas();
                     }
                 }
@@ -1448,17 +1471,20 @@ void Tracking::Track()
         }
     }
 
-
+	// 如果系统是使用Imu的，而且上一帧不为空的话(若是第一帧则不会执行)，则更新 Bias 的 difference
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO) && mpLastKeyFrame)
         mCurrentFrame.SetNewBias(mpLastKeyFrame->GetImuBias());
 
+	// 如果图像复位过、或者第一次运行，则为NO_IMAGE_YET状态
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
     }
 
+	// mLastProcessedState 存储了Tracking最新的状态，用于FrameDrawer中的绘制
     mLastProcessedState=mState;
 
+    // 若当前地图是刚创建的时候不进行Imu预积分，因为当前地图只有一个关键帧，预积分也没用而且浪费时间。否则对Imu进行预积分，
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO) && !mbCreatedMap)
     {
 #ifdef SAVE_TIMES
