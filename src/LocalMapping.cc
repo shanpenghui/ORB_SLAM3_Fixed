@@ -202,7 +202,7 @@ void LocalMapping::Run()
                         }
                         //else if (mbNotBA2){
                         else if(!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()){
-                            if (mTinit>15.0f){ // 15.0f
+                            if (mTinit>15.0f) { // 15.0f
                                 cout << "start VIBA 2" << endl;
                                 mpCurrentKeyFrame->GetMap()->SetIniertialBA2();
                                 if (mbMonocular)
