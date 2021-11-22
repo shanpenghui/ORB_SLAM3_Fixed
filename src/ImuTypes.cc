@@ -261,19 +261,28 @@ void Preintegrated::IntegrateNewMeasurement(const cv::Point3f &acceleration, con
     // Rotation is the last to be updated.
 
     //Matrices to compute covariance
+    // step 1. 初始化 A() 和 B()
+    // A = 单位矩阵
+    // B = 零矩阵
     cv::Mat A = cv::Mat::eye(9,9,CV_32F);
     cv::Mat B = cv::Mat::zeros(9,6,CV_32F);
 
+    // step 2. 初始化 加速度 和 随机游走
+    //         acc(加速度) = measurement(测量值) - bias(偏置)
+    // accW(角速度随机游走) = measurement(测量值) - bias(偏置)
     cv::Mat acc = (cv::Mat_<float>(3,1) << acceleration.x-b.bax,acceleration.y-b.bay, acceleration.z-b.baz);
     cv::Mat accW = (cv::Mat_<float>(3,1) << angVel.x-b.bwx, angVel.y-b.bwy, angVel.z-b.bwz);
 
+    // step 3.
     avgA = (dT*avgA + dR*acc*dt)/(dT+dt);
     avgW = (dT*avgW + accW*dt)/(dT+dt);
 
+    // step 4.
     // Update delta position dP and velocity dV (rely on no-updated delta rotation)
     dP = dP + dV*dt + 0.5f*dR*acc*dt*dt;
     dV = dV + dR*acc*dt;
 
+    // step 5.
     // Compute velocity and position parts of matrices A and B (rely on non-updated delta rotation)
     cv::Mat Wacc = (cv::Mat_<float>(3,3) << 0, -acc.at<float>(2), acc.at<float>(1),
                                                    acc.at<float>(2), 0, -acc.at<float>(0),

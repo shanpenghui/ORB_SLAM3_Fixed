@@ -75,20 +75,24 @@ void LocalMapping::Run()
         SetAcceptKeyFrames(false);
 
         // Check if there are keyframes in the queue
+        // 如果有关键帧在队列中且Imu数据可用，则正常利用Imu进行运动模型估计
         if(CheckNewKeyFrames() && !mbBadImu)
         {
             // std::cout << "LM" << std::endl;
             std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
 
             // BoW conversion and insertion in Map
+            // step 1. 处理新的关键帧，包括计算BoW向量、更新共视图连接、插入新的关键帧
             ProcessNewKeyFrame();
             std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
             // Check recent MapPoints
+			// step 2. 剔除无效的地图点
             MapPointCulling();
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
             // Triangulate new MapPoints
+            // step 3. 三角化新的地图点
             CreateNewMapPoints();
             std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 
@@ -102,9 +106,11 @@ void LocalMapping::Run()
 
             mbAbortBA = false;
 
+            // step 4. 当存在关键帧的时候，要找到更多匹配点和剔除冗余地图点（CheckNewKeyFrames()返回False表示关键帧队列不是空的）
             if(!CheckNewKeyFrames())
             {
                 // Find more matches in neighbor keyframes and fuse point duplications
+                // step 4.1 在相邻关键帧中找到更多的匹配点，剔除冗余的地图点
                 SearchInNeighbors();
             }
 
@@ -119,11 +125,13 @@ void LocalMapping::Run()
             f_lm << mpCurrentKeyFrame->GetMap()->GetAllKeyFrames().size() << ",";
             f_lm << mlpRecentAddedMapPoints.size() << ",";
             f_lm << mpCurrentKeyFrame->GetMap()->GetAllMapPoints().size() << ",";*/
-            //--
+            // 设置不加入BA的固定关键帧数量
             int num_FixedKF_BA = 0;
 
+            // step 5. 当存在关键帧且系统没有被打断的时候，进行Local BA 和关键帧增删操作
             if(!CheckNewKeyFrames() && !stopRequested())
             {
+            	// step 5.1 如果地图中的关键帧超过2个的时候
                 if(mpAtlas->KeyFramesInMap()>2)
                 {
                     if(mbInertial && mpCurrentKeyFrame->GetMap()->isImuInitialized())
@@ -159,6 +167,7 @@ void LocalMapping::Run()
                 t5 = std::chrono::steady_clock::now();
 
                 // Initialize IMU here
+				// step 5.2 运行到这证明没有初始化过，需要对Imu初始化
                 if(!mpCurrentKeyFrame->GetMap()->isImuInitialized() && mbInertial)
                 {
                     if (mbMonocular)
@@ -169,6 +178,7 @@ void LocalMapping::Run()
 
 
                 // Check redundant local Keyframes
+				// step 5.3 剔除冗余的关键帧
                 KeyFrameCulling();
 
                 t6 = std::chrono::steady_clock::now();
@@ -192,7 +202,7 @@ void LocalMapping::Run()
                         }
                         //else if (mbNotBA2){
                         else if(!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()){
-                            if (mTinit>15.0f){ // 15.0f
+                            if (mTinit>15.0f) { // 15.0f
                                 cout << "start VIBA 2" << endl;
                                 mpCurrentKeyFrame->GetMap()->SetIniertialBA2();
                                 if (mbMonocular)
@@ -223,6 +233,7 @@ void LocalMapping::Run()
 
             std::chrono::steady_clock::time_point t7 = std::chrono::steady_clock::now();
 
+            // step 6. 插入关键帧到闭环检测器里
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
             std::chrono::steady_clock::time_point t8 = std::chrono::steady_clock::now();
 
@@ -246,6 +257,7 @@ void LocalMapping::Run()
             //--
 
         }
+        // 有停止指令的话则停止，而当建图接收关键帧的时候才插入关键帧否则会打断BA
         else if(Stop() && !mbBadImu)
         {
             // Safe area to stop

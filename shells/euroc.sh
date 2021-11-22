@@ -1,9 +1,9 @@
 #!/bin/bash
 cd ..
 currentDir=$(pwd)
-runType=Monocular
+runType=Monocular-Inertial
 
-pathDatasetEuroc='/home/sph/Downloads/dataset/EuRoC' #Example, it is necesary to change it by the dataset path
+pathDatasetEuroc='/home/shanph/disk/dataset/EuRoC' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetEuroc" ];then
   echo  ""
 else
@@ -45,7 +45,7 @@ fi
 #------------------------------------
 # Monocular Examples
 echo "Launching MH01 with $runType sensor"
-./Examples/Monocular/mono_euroc ./Vocabulary/ORBvoc.txt ./Examples/Monocular/EuRoC.yaml "$pathDatasetEuroc"/MH_01_easy ./Examples/Monocular/EuRoC_TimeStamps/MH01.txt dataset-MH01_mono
+./Examples/"$runType"/mono_inertial_euroc ./Vocabulary/ORBvoc.txt ./Examples/"$runType"/EuRoC.yaml "$pathDatasetEuroc"/MH_01_easy ./Examples/"$runType"/EuRoC_TimeStamps/MH01.txt dataset-MH01_mono
 
 #------------------------------------
 # Stereo Examples
