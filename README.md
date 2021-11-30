@@ -127,6 +127,40 @@ ros::Subscriber sub = nodeHandler.subscribe("/usb_cam/image_raw", 1, &ImageGrabb
 ```
 
 After the steps up, it work finally!
+## 七、用Intel Realsense T265跑实际场景
+7.1 安装IntelRealsense依赖库
+```shell script
+sudu apt-get install ros-noetic-ddynamic-reconfigure
+```
+7.2 下载IntelRealsense官方ROS版SDK
+```shell script
+cd ~/YOUR_WORKSPACE/src
+git clone https://github.com/IntelRealSense/realsense-ros
+cd ..
+catkin_make
+source ~/YOUR_WORKSPACE/devel/setup.bash
+```
+7.3 T265相机默认是将陀螺仪与加速度计话题分别发布，需修改rs_t265.launch文件31行如下，使其发布IMU标准话题
+```shell script
+<arg name="unite_imu_method"  default="copy"/>
+```
+7.4 查看T265相机内参
+```shell script
+rs-enumerate-devices -c
+```
+
+修改TUM_512.yaml文件，写入T265相机与IMU参数。
+
+7.5 运行T265相机
+```shell script
+roslaunch realsense2_camera rs_t265.launch
+```
+
+7.6 运行ORBSLAM3（单目+IMU）
+```shell script
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/home/YOUR_PATH/ORB_SLAM3_Fixed/Examples/ROS
+roslaunch ORB_SLAM3 MARS-bag_play_mono_inertial.launch
+```
 
 #### 利用自己相机模块可能出现的问题
 When I first run it, error come out:
