@@ -4,7 +4,7 @@
 
     <node name="republishsterer" type="republish" pkg="image_transport" respawn="true"  output="screen"
           args="compressed in:=/camera_up_l/image_raw
-    raw out:=/camera/image_raw"/>
+                raw out:=/camera/image_raw"/>
 
 
 </launch>
