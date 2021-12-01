@@ -255,7 +255,21 @@ Translation_Vector[2]  -->  Tbc.data[2][3]
 roslaunch realsense2_camera rs_t265.launch
 ```
 
-7.6 Run ORBSLAM3（Monocular-Inertial）
+7.6 Change imu topic
+
+To make this code suitable for dataset, so the topic change is not commited in code.
+
+Before use own camera, you should change imu topic name from /imu to :  
+
+
+ (in Line 98 of ORB_SLAM3_Fixed/Examples/ROS/ORB_SLAM3/src/ros_mono_inertial.cc)
+
+
+```shell script
+/camera/imu
+```
+
+7.7 Run ORBSLAM3（Monocular-Inertial）
 
 Before do this step, change the file_path in mono_inertial.launch file to your own env.
 
