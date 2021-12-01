@@ -257,6 +257,21 @@ roslaunch realsense2_camera rs_t265.launch
 
 7.6 Run ORBSLAM3（Monocular-Inertial）
 
+Before do this step, change the file_path in mono_inertial.launch file to your own env.
+
+This example is :
+
+```shell
+args="/home/user/Downloads/ORB_SLAM3_Fixed/Vocabulary/ORBvoc.txt /home/user/Downloads/ORB_SLAM3_Fixed/Examples/Monocular-Inertial/TUM_512.yaml"
+```
+
+The format is :
+```shell
+args="<your_path>/ORB_SLAM3_Fixed/Vocabulary/ORBvoc.txt <your_path>/ORB_SLAM3_Fixed/Examples/Monocular-Inertial/TUM_512.yaml"
+```
+
+Then run :
+
 ```shell script
 source /opt/ros/noetic/setup.bash
 export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:<your_path>/ORB_SLAM3_Fixed/Examples/ROS
