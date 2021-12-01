@@ -183,6 +183,27 @@ The project realsense-ros link is [https://github.com/IntelRealSense/realsense-r
 
 If you can not launch roscore, you can solve by add hostname which is needed by roscore into the file /etc/hosts.
 
+If want to debug remote by clion, try:
+
+```shell
+service ssh restart
+service rsync restart
+```
+
+And then use sftp name/password :
+
+```shell
+user/crc
+```
+
+Or
+
+```shell
+remoter_user/crc
+```
+
+If cannot create a directory, delete the cmake-build-debug-remote-host folder and reload cmake project.
+
 7.3 Publish imu topic by combining the gyro and accel.
 
 Change the parameter named "unite-imu-method" on Line 31th in file rs_t265.launch of realsense-ros project, because default setting of gyro and accel is separate.
