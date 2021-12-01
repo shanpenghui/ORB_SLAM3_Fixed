@@ -205,9 +205,9 @@ The relation of .yaml file and realsense-sdk info is :
 
 Intrinsic/Extrinsic from "Gyro" To "Fisheye 1" (realsense-sdk info)    =   Rotation matrix of Tbc  #Transformation from body-frame (imu) to camera (ORB-SLAM3-Fixed/Examples/Monocular-Inertial/TUM_512.yaml)
 
-
 Intrinsic Params:
 
+```shell
 PPX  -->  Camera.cx
 PPY  -->  Camera.cy
 Fx   -->  Camera.fx
@@ -216,18 +216,17 @@ Coeffs[0]  -->  Camera.k1
 Coeffs[1]  -->  Camera.k2
 Coeffs[2]  -->  Camera.k3
 Coeffs[3]  -->  Camera.k4
+```
 
-<p align='center'>
-    < img src="./pics/Intrinsic_param.png" alt="drawing" width="800"/>
-</p >
 
-<p align='center'>
-    < img src="./pics/Tbc_data_Int.png" alt="drawing" width="800"/>
-</p >
+![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Intrinsic_param.png)
+
+![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Tbc_data_Int.png)
 
 
 Extrinsic Params:
 
+```shell
 Rotation_Matrix (Extrinsic from "Gyro" To "Fisheye 1")  --> Tbc.data.R
 Rotation_Matrix[0][0]  -->  Tbc.data[0][0]
 Rotation_Matrix[0][1]  -->  Tbc.data[0][1]
@@ -243,14 +242,11 @@ Translation Vector (Extrinsic from "Gyro" To "Fisheye 1")  --> Tbc.data.t
 Translation_Vector[0]  -->  Tbc.data[0][3]
 Translation_Vector[1]  -->  Tbc.data[1][3]
 Translation_Vector[2]  -->  Tbc.data[2][3]
+```
 
-<p align='center'>
-    < img src="./pics/Extrinsic_param.png" alt="drawing" width="800"/>
-</p >
+![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Extrinsic_param.png)
 
-<p align='center'>
-    < img src="./pics/Tbc_data_Ext.png" alt="drawing" width="800"/>
-</p >
+![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Tbc_data_Ext.png)
 
 
 7.5 Launch T265
