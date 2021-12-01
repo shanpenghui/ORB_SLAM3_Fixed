@@ -29,12 +29,12 @@ if [[ $# -lt 2 ]]; then
 else
     printf "${GREEN}$1 is mapped to /midea_robot/ros1_ws in docker.${NC}\n"
     printf "${GREEN}$2 is mapped to /midea_robot/ros2_ws in docker.${NC}\n"
-#    if [[ $# -eq 3 && $3 == "host" ]]; then
-#        printf "${YELLOW}Attached to host network.\n"
-#        NETWORK_SETTING="--privileged --net=host"
-#    else
+    if [[ $# -eq 3 && $3 == "host" ]]; then
+        printf "${YELLOW}Attached to host network.\n"
+        NETWORK_SETTING="--privileged --net=host"
+    else
         NETWORK_SETTING="-p 2222:2222 --net=host"
-#    fi
+    fi
 fi
 
 XAUTH=/tmp/.docker.xauth

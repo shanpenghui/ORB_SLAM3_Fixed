@@ -9,11 +9,13 @@ Reference article 参考文章：
 >EVO Evaluation of SLAM 5 --- ORB-SLAM3 精度和性能效果评估
 >https://blog.csdn.net/shanpenghui/article/details/109361766
 
+## Add instructions for running with your own T265 camera / 新增实际用T265相机运行的说明
+
 ## 新增了MLPnP算法的详细注释
 
 ## 新增了RGBD运行shell
 
-## 一、Install Third Party
+## 1、Install Third Party
 
 Pangolin:
 ```shell script
@@ -66,14 +68,14 @@ ippicv_2020_lnx_intel64_20191018_general.tgz 下载地址：
 链接: https://pan.baidu.com/s/1XwhaDnTaCxAIpmZCRijYvg 
 提取码: rq4r
 
-## 二、Build ORB-SLAM3:
+## 2、Build ORB-SLAM3:
 Work in shells path, continue the operation upon:
 ```shell script
 cd shells
 ./build.sh
 ```
 
-## 三、Run ORB-SLAM3 in shell
+## 3、Run ORB-SLAM3 in shell
 Before running, you should change the path in tum_vi.sh where you save the dataset, such as:
 ```shell script
 pathDatasetTUM_VI='/home/sph/Downloads' #Example, it is necesary to change it by the dataset path
@@ -88,7 +90,7 @@ cd shells
 or 
 ./euroc.sh
 ```
-## 四、Run ORB-SLAM3 in ros
+## 4、Run ORB-SLAM3 in ros
 Build ros version
 ```shell script
 cd shells
@@ -104,11 +106,16 @@ cd ORB_SLAM3_Fixed
 rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular-Inertial/TUM_512.yaml
 ```
 
-## 五、注意:
+## 5、Attention:
 
-### 1.目前只有单目带IMU的被激活,里面的配置需要对应自己的电脑更新
+### 1. Update setting with your own PC.
 
-### 2.原版出现的错误(因为本工程是在ORB3刚开放的时候就建立了，所以有些问题应该被作者修复了，如果有遗漏或冗余请读者自行忽略)
+目前只有单目带IMU的被激活,里面的配置需要对应自己的电脑更新
+
+### 2. Old version bug might be fixed.
+
+原版出现的错误(因为本工程是在ORB3刚开放的时候就建立了，所以有些问题应该被作者修复了，如果有遗漏或冗余请读者自行忽略)
+
 原版ros的编译会出现ORBSLAM2的错误
 ```C++
 error: ‘ORB_SLAM2’ has not been declared
@@ -129,7 +136,7 @@ fatal error: GeometricCamera.h: No such file or directory #include "GeometricCam
 ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
 ```
 
-## 六、Use usb_cam to run camera_node
+## 6、Use usb_cam to run camera_node
 But!!!! You can`t run ORB-SLAM3 without run the camera_node!!!!
 So, if you want to test ros-version, just use your computer camera(wish you have)
 
@@ -145,7 +152,7 @@ ros::Subscriber sub = nodeHandler.subscribe("/usb_cam/image_raw", 1, &ImageGrabb
 
 After the steps up, it work finally!
 
-#### 利用自己相机模块可能出现的问题
+#### Problem with using own camera
 When I first run it, error come out:
 ```C++
 Failed to load module "canberra-gtk-module"
@@ -153,6 +160,111 @@ Failed to load module "canberra-gtk-module"
 To solve this problem, install the module:
 ```shell script
 sudo apt-get install libcanberra-gtk-module
+```
+
+## 7、Run with Intel Realsense T265
+
+Make sure docker is installed please !!!
+
+7.1 Pull docker images
+
+```shell script
+docker pull registry.cn-hangzhou.aliyuncs.com/slam_docker/slam_docker:gpu
+```
+
+7.2 Run docker
+
+```shell script
+cd ORB_SLAM3_Fixed/shells
+sudo ./run_docker_gpu.sh <path_of_realsense_ros> <path_of_orbslam3_fixed> host
+```
+
+The project realsense-ros link is [https://github.com/IntelRealSense/realsense-ros](https://github.com/IntelRealSense/realsense-ros)
+
+If you can not launch roscore, you can solve by add hostname which is needed by roscore into the file /etc/hosts.
+
+7.3 Publish imu topic by combining the gyro and accel.
+
+Change the parameter named "unite-imu-method" on Line 31th in file rs_t265.launch of realsense-ros project, because default setting of gyro and accel is separate.
+
+```shell script
+<arg name="unite_imu_method"  default="copy"/>
+```
+
+7.4 Get Intrinsic and Extrinsic Parameters
+
+Run the command below:
+
+```shell script
+rs-enumerate-devices -c
+```
+
+Modify the file ORB-SLAM3-Fixed/Examples/Monocular-Inertial/TUM_512.yaml.
+
+The relation of .yaml file and realsense-sdk info is :
+
+Intrinsic/Extrinsic from "Gyro" To "Fisheye 1" (realsense-sdk info)    =   Rotation matrix of Tbc  #Transformation from body-frame (imu) to camera (ORB-SLAM3-Fixed/Examples/Monocular-Inertial/TUM_512.yaml)
+
+
+Intrinsic Params:
+
+PPX  -->  Camera.cx
+PPY  -->  Camera.cy
+Fx   -->  Camera.fx
+Fy   -->  Camera.fy
+Coeffs[0]  -->  Camera.k1
+Coeffs[1]  -->  Camera.k2
+Coeffs[2]  -->  Camera.k3
+Coeffs[3]  -->  Camera.k4
+
+<p align='center'>
+    < img src="./pics/Intrinsic_param.png" alt="drawing" width="800"/>
+</p >
+
+<p align='center'>
+    < img src="./pics/Tbc_data_Int.png" alt="drawing" width="800"/>
+</p >
+
+
+Extrinsic Params:
+
+Rotation_Matrix (Extrinsic from "Gyro" To "Fisheye 1")  --> Tbc.data.R
+Rotation_Matrix[0][0]  -->  Tbc.data[0][0]
+Rotation_Matrix[0][1]  -->  Tbc.data[0][1]
+Rotation_Matrix[0][2]  -->  Tbc.data[0][2]
+Rotation_Matrix[1][0]  -->  Tbc.data[1][0]
+Rotation_Matrix[1][1]  -->  Tbc.data[1][1]
+Rotation_Matrix[1][2]  -->  Tbc.data[1][2]
+Rotation_Matrix[2][0]  -->  Tbc.data[2][0]
+Rotation_Matrix[2][1]  -->  Tbc.data[2][1]
+Rotation_Matrix[2][2]  -->  Tbc.data[2][2]
+
+Translation Vector (Extrinsic from "Gyro" To "Fisheye 1")  --> Tbc.data.t
+Translation_Vector[0]  -->  Tbc.data[0][3]
+Translation_Vector[1]  -->  Tbc.data[1][3]
+Translation_Vector[2]  -->  Tbc.data[2][3]
+
+<p align='center'>
+    < img src="./pics/Extrinsic_param.png" alt="drawing" width="800"/>
+</p >
+
+<p align='center'>
+    < img src="./pics/Tbc_data_Ext.png" alt="drawing" width="800"/>
+</p >
+
+
+7.5 Launch T265
+
+```shell script
+roslaunch realsense2_camera rs_t265.launch
+```
+
+7.6 Run ORBSLAM3（Monocular-Inertial）
+
+```shell script
+source /opt/ros/noetic/setup.bash
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:<your_path>/ORB_SLAM3_Fixed/Examples/ROS
+roslaunch ORB_SLAM3 mono_inertial.launch
 ```
 
 --------------------------------------------------
