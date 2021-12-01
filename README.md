@@ -183,7 +183,7 @@ The project realsense-ros link is [https://github.com/IntelRealSense/realsense-r
 
 If you can not launch roscore, you can solve by add hostname which is needed by roscore into the file /etc/hosts.
 
-If want to debug remote by clion, try:
+If want to debug remote by clion, try in docker after run with run_docker_gpu.sh shells:
 
 ```shell
 service ssh restart
