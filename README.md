@@ -280,6 +280,21 @@ Translation_Vector[2]  -->  Tbc.data[2][3]
 
 ### 7.5 Launch T265
 
+Before run this, you should make sure the version of realsense-ros project is less than 2.2.16(Tag), because the version of realsense-sdk is 2.37y.0
+
+So git checkout tag , then build and run (don't forget changing the unite_imu_method param in rs_t265.launch) :
+
+```shell
+git checkout 2.2.16
+```
+
+Make sure the parameter of fisheye1 and fisheye2 is set to true at the same time, which is in rs_t265.launch:
+
+```shell
+  <arg name="enable_fisheye1"     default="true"/>
+  <arg name="enable_fisheye2"     default="true"/>
+```
+
 ```shell script
 roslaunch realsense2_camera rs_t265.launch
 ```
