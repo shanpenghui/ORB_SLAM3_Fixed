@@ -27,8 +27,8 @@ if [[ $# -lt 2 ]]; then
     echo "[Usage]: ./run_docker.sh PATH_TO_ROS1_WS PATH_TO_ROS2_WS [host]"
     exit -1
 else
-    printf "${GREEN}$1 is mapped to /midea_robot/ros1_ws in docker.${NC}\n"
-    printf "${GREEN}$2 is mapped to /midea_robot/ros2_ws in docker.${NC}\n"
+    printf "${GREEN}$1 is mapped to /slam/ros1_ws in docker.${NC}\n"
+    printf "${GREEN}$2 is mapped to /slam/ros2_ws in docker.${NC}\n"
     if [[ $# -eq 3 && $3 == "host" ]]; then
         printf "${YELLOW}Attached to host network.\n"
         NETWORK_SETTING="--privileged --net=host"
@@ -62,12 +62,11 @@ docker run -it --rm \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --volume="$XAUTH:$XAUTH" \
     --volume="${DOCKER_VOLUME}:/root" \
-    --volume="$1:/midea_robot/ros1_ws" \
-    --volume="$2:/midea_robot/ros2_ws" \
-    --volume="$2:/midea_robot/ros2_ws" \
+    --volume="$1:/slam/ros1_ws" \
+    --volume="$2:/slam/ros2_ws" \
     --volume="/dev:/dev" \
     --runtime=nvidia ${NETWORK_SETTING} \
-    --workdir="/midea_robot" \
+    --workdir="/slam" \
     ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} \
     terminator --title="DOCKER ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}"
 
