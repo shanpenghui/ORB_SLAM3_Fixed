@@ -166,13 +166,13 @@ sudo apt-get install libcanberra-gtk-module
 
 Make sure docker is installed please !!!
 
-7.1 Pull docker images
+### 7.1 Pull docker images
 
 ```shell script
 docker pull registry.cn-hangzhou.aliyuncs.com/slam_docker/slam_docker:gpu
 ```
 
-7.2 Run docker
+### 7.2 Run docker
 
 ```shell script
 cd ORB_SLAM3_Fixed/shells
@@ -204,7 +204,15 @@ remoter_user/crc
 
 If cannot create a directory, delete the cmake-build-debug-remote-host folder and reload cmake project.
 
-7.3 Publish imu topic by combining the gyro and accel.
+If you want to add dataset, just add the text:
+
+```shell
+--volume="/home/<your_user_name>:/home/<your_user_name>" \
+```
+
+into ORB_SLAM3_Fixed/shells/run_docker_gpu.sh file.
+
+### 7.3 Publish imu topic by combining the gyro and accel.
 
 Change the parameter named "unite-imu-method" on Line 31th in file rs_t265.launch of realsense-ros project, because default setting of gyro and accel is separate.
 
@@ -212,7 +220,7 @@ Change the parameter named "unite-imu-method" on Line 31th in file rs_t265.launc
 <arg name="unite_imu_method"  default="copy"/>
 ```
 
-7.4 Get Intrinsic and Extrinsic Parameters
+### 7.4 Get Intrinsic and Extrinsic Parameters
 
 Run the command below:
 
@@ -270,13 +278,13 @@ Translation_Vector[2]  -->  Tbc.data[2][3]
 ![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Tbc_data_Ext.png)
 
 
-7.5 Launch T265
+### 7.5 Launch T265
 
 ```shell script
 roslaunch realsense2_camera rs_t265.launch
 ```
 
-7.6 Change imu topic
+### 7.6 Change imu topic
 
 To make this code suitable for dataset, so the topic change is not commited in code.
 
@@ -290,7 +298,7 @@ Before use own camera, you should change imu topic name from /imu to :
 /camera/imu
 ```
 
-7.7 Run ORBSLAM3（Monocular-Inertial）
+### 7.7 Run ORBSLAM3（Monocular-Inertial）
 
 Before do this step, change the file_path in mono_inertial.launch file to your own env.
 
