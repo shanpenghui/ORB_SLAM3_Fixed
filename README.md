@@ -162,7 +162,7 @@ To solve this problem, install the module:
 sudo apt-get install libcanberra-gtk-module
 ```
 
-## 7、Run with Intel Realsense T265
+## 7、Run ORB-SLAM3 with Intel Realsense T265
 
 Make sure docker is installed please !!!
 
@@ -212,15 +212,7 @@ If you want to add dataset, just add the text:
 
 into ORB_SLAM3_Fixed/shells/run_docker_gpu.sh file.
 
-### 7.3 Publish imu topic by combining the gyro and accel.
-
-Change the parameter named "unite-imu-method" on Line 31th in file rs_t265.launch of realsense-ros project, because default setting of gyro and accel is separate.
-
-```shell script
-<arg name="unite_imu_method"  default="copy"/>
-```
-
-### 7.4 Get Intrinsic and Extrinsic Parameters
+### 7.3 Set Intrinsic & Extrinsic Parameters
 
 Run the command below:
 
@@ -278,28 +270,24 @@ Translation_Vector[2]  -->  Tbc.data[2][3]
 ![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Tbc_data_Ext.png)
 
 
-### 7.5 Launch T265
-
-Before run this, you should make sure the version of realsense-ros project is less than 2.2.16(Tag), because the version of realsense-sdk is 2.37y.0
+### 7.4 Launch T265 ros node
 
 So git checkout tag , then build and run (don't forget changing the unite_imu_method param in rs_t265.launch) :
 
 ```shell
-git checkout 2.2.16
+git clone https://github.com/IntelRealSense/realsense-ros
+cd realsense-ros
+git checkout development
+git pull
 ```
 
-Make sure the parameter of fisheye1 and fisheye2 is set to true at the same time, which is in rs_t265.launch:
-
-```shell
-  <arg name="enable_fisheye1"     default="true"/>
-  <arg name="enable_fisheye2"     default="true"/>
-```
+Run rs_t265.launch with params : 
 
 ```shell script
-roslaunch realsense2_camera rs_t265.launch
+roslaunch realsense2_camera rs_t265.launch fisheye_width:=848 fisheye_height:=800 enable_fisheye1:=true enable_fisheye2:=true unite_imu_method:=copy
 ```
 
-### 7.6 Change imu topic
+### 7.5 Set imu topic
 
 To make this code suitable for dataset, so the topic change is not commited in code.
 
@@ -313,7 +301,7 @@ Before use own camera, you should change imu topic name from /imu to :
 /camera/imu
 ```
 
-### 7.7 Run ORBSLAM3（Monocular-Inertial）
+### 7.6 Run ORB-SLAM3（Monocular-Inertial）
 
 Before do this step, change the file_path in mono_inertial.launch file to your own env.
 
