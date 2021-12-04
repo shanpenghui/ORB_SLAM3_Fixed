@@ -261,19 +261,29 @@ void Preintegrated::IntegrateNewMeasurement(const cv::Point3f &acceleration, con
     // Rotation is the last to be updated.
 
     //Matrices to compute covariance
-    // step 1. 初始化 A() 和 B()
+    // step 1. 初始化 A && B
     // A = 单位矩阵
     // B = 零矩阵
     cv::Mat A = cv::Mat::eye(9,9,CV_32F);
     cv::Mat B = cv::Mat::zeros(9,6,CV_32F);
 
-    // step 2. 初始化 加速度 和 随机游走
-    //         acc(加速度) = measurement(测量值) - bias(偏置)
-    // accW(角速度随机游走) = measurement(测量值) - bias(偏置)
+    // step 2. 初始化 acc(加速度) && accW(随机游走)
+    //         acc(加速度) = measurement(测量值) - bias(估计值)
+    //         acc.x      = acceleration.x     - b.bax
+	//         acc.y      = acceleration.y     - b.bay
+	//         acc.z      = acceleration.z     - b.baz
+    // accW(角速度随机游走) = measurement(测量值) - bias(估计值)
+	//        accW.x      = angVel.x           - b.bwx
+	//        accW.y      = angVel.y           - b.bwy
+	//        accW.z      = angVel.z           - b.bwz
     cv::Mat acc = (cv::Mat_<float>(3,1) << acceleration.x-b.bax,acceleration.y-b.bay, acceleration.z-b.baz);
     cv::Mat accW = (cv::Mat_<float>(3,1) << angVel.x-b.bwx, angVel.y-b.bwy, angVel.z-b.bwz);
 
     // step 3.
+    // 角加速度(avgA) = 角速度() / 时间()
+    //               = [一段时间内平均角速度的积分(dT*avg) + 一段时间内平均角加速度积分(dR*acc*dt)] / 一段时间(dT+dt)
+    // 角速度随机游走(avgW) = 角速度随机游走() / 时间()
+    //               = [一段时间内角度产生的平均游走的积分(dT*avgW) + 一段时间内加速度产生的平均游走的积分(accW*dt)]
     avgA = (dT*avgA + dR*acc*dt)/(dT+dt);
     avgW = (dT*avgW + accW*dt)/(dT+dt);
 

@@ -233,6 +233,8 @@ public:
     Bias GetUpdatedBias();
 
 public:
+	// Total integrated time
+	// 预积分累计时间
     float dT;
     cv::Mat C;
     cv::Mat Info;
