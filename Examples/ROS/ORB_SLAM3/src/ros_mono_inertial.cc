@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   ros::spin();
 
   SLAM.Shutdown();
-  SLAM.SaveTrajectoryEuRoC("/home/user/Documents/orbslam.txt");
+  SLAM.SaveTrajectoryEuRoCAndOptiTrack("/home/shanph/Documents/orbslam.txt", "/home/shanph/Documents/optitrack.txt");
 
   return 0;
 }

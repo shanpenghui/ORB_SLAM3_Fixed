@@ -157,7 +157,8 @@ public:
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
     void SaveKeyFrameTrajectoryTUM(const string &filename);
 
-	void SaveTrajectoryEuRoC(const string &orbSlamFilename, const string &optiTrackFilename);
+	void SaveTrajectoryEuRoC(const string &filename);
+	void SaveTrajectoryEuRoCAndOptiTrack(const string &orbSlamFilename, const string &optiTrackFilename);
     void SaveKeyFrameTrajectoryEuRoC(const string &filename);
 
     // Save data used for initialization debug
