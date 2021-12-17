@@ -48,6 +48,8 @@ find_package(Pangolin REQUIRED)
 find_package(Glog)
 
 include_directories(
+include
+include/OptiTrack
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${PROJECT_SOURCE_DIR}/include/CameraModels
@@ -112,6 +114,8 @@ include/CameraModels/KannalaBrandt8.h
 include/OptimizableTypes.h
 include/MLPnPsolver.h
 include/TwoViewReconstruction.h
+# add optitrack
+include/OptiTrackClient_test.hpp
 src/TwoViewReconstruction.cc)
 
 add_subdirectory(Thirdparty/g2o)
@@ -125,6 +129,7 @@ ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 -lboost_serialization
 -lcrypto
 glog::glog
+${PROJECT_SOURCE_DIR}/lib/libNatNet.so
 )
 
 

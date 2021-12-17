@@ -30,6 +30,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
+#include <OptiTrackClient_test.hpp>
 
 namespace ORB_SLAM3
 {

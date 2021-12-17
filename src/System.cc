@@ -33,8 +33,18 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 
+// opti track
+OptiTrackFrameReceivedCallback g_dataCallback;
+NatNetClient* g_pClient = nullptr;
+FILE* g_outputFile;
+sNatNetClientConnectParams g_connectParams; //NOLINT
+int g_analogSamplesPerMocapFrame = 0;
+sServerDescription g_serverDescription;
+
 namespace ORB_SLAM3
 {
+
+std::vector<vector<RigidBody>> System::rigidBodies;
 
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
@@ -179,6 +189,10 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(this, mpAtlas, mSensor==MONOCULAR || mSensor==IMU_MONOCULAR, mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO, strSequence);
     mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
+
+	// subscribe opti track
+    mptOptiTrack = new thread(&ORB_SLAM3::System::run, this);
+    
     mpLocalMapper->mInitFr = initFr;
     mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
     if(mpLocalMapper->mThFarPoints!=0)
@@ -217,6 +231,67 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     // Fix verbosity
     Verbose::SetTh(Verbose::VERBOSITY_QUIET);
 
+}
+
+void System::run()
+{
+    //保存opti_track数据
+    std::string serverAddress = "192.168.1.13";
+    std::string clientAddress = "192.168.1.23";
+
+    OptiTrackClient client([](sFrameOfMocapData *data) {
+    int marker_quantity = data->nLabeledMarkers;
+    int rigid_body_quantity = data->nRigidBodies;
+
+    std::vector<Marker> markers;
+    for(int i=0; i < data->nLabeledMarkers; i++) {
+        const auto &item = data->LabeledMarkers[i];
+        struct Position position;
+        struct Marker marker;
+
+        position.x = item.x;
+        position.y = item.y;
+        position.z = item.z;
+
+        marker.id = item.ID;
+        marker.position = position;
+        marker.state = item.params;
+        marker.residual = item.residual;
+
+        markers.push_back(marker);
+    }
+
+    std::vector<RigidBody> tmp_rigidBodies;
+    for(int i=0; i < data->nRigidBodies; i++) {
+        const auto &item = data->RigidBodies[i];
+        struct Position position;
+        struct Orientation orientation;
+        struct RigidBody rigidBody;
+        struct Pose pose;
+        
+        position.x = item.x;
+        position.y = item.y;
+        position.z = item.z;
+        orientation.x = item.qx;
+        orientation.y = item.qy;
+        orientation.z = item.qz;
+        orientation.w = item.qw;
+
+        pose.position = position;
+        pose.orientation = orientation;
+
+        // rigidBody.stamp = 
+        rigidBody.id = item.ID;
+        rigidBody.pose = pose;
+        rigidBody.mean_error = item.MeanError;
+        rigidBody.tracking_flag = item.params;
+
+        tmp_rigidBodies.push_back(rigidBody);
+    }
+    System::rigidBodies.push_back(tmp_rigidBodies);
+}, serverAddress.c_str(), clientAddress.c_str());
+
+  while(1) {}
 }
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, const vector<IMU::Point>& vImuMeas, string filename)
@@ -570,10 +645,10 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     f.close();
 }
 
-void System::SaveTrajectoryEuRoC(const string &filename)
+void System::SaveTrajectoryEuRoC(const string &orbSlamFilename, const string &optiTrackFilename)
 {
 
-    cout << endl << "SaveTrajectoryEuRoC to " << filename << " ..." << endl;
+    cout << endl << "SaveTrajectoryEuRoC to " << orbSlamFilename << " ..." << endl;
     /*if(mSensor==MONOCULAR)
     {
         cerr << "ERROR: SaveTrajectoryEuRoC cannot be used for monocular." << endl;
@@ -604,7 +679,7 @@ void System::SaveTrajectoryEuRoC(const string &filename)
         Twb = vpKFs[0]->GetPoseInverse();
 
     ofstream f;
-    f.open(filename.c_str());
+    f.open(orbSlamFilename.c_str());
     // cout << "file open" << endl;
     f << fixed;
 
@@ -623,6 +698,11 @@ void System::SaveTrajectoryEuRoC(const string &filename)
     //cout << "size mpTracker->mlFrameTimes: " << mpTracker->mlFrameTimes.size() << endl;
     //cout << "size mpTracker->mlbLost: " << mpTracker->mlbLost.size() << endl;
 
+
+    ofstream f_optic;
+    f_optic.open(optiTrackFilename.c_str());
+    f_optic << fixed;
+    auto optickTrackDataSeqPtr = mpTracker->mlOptiTrackPoses.begin();
 
     for(list<cv::Mat>::iterator lit=mpTracker->mlRelativeFramePoses.begin(),
         lend=mpTracker->mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++, lbL++)
@@ -674,9 +754,19 @@ void System::SaveTrajectoryEuRoC(const string &filename)
             cv::Mat Rwb = Tbw.rowRange(0,3).colRange(0,3).t();
             cv::Mat twb = -Rwb*Tbw.rowRange(0,3).col(3);
             vector<float> q = Converter::toQuaternion(Rwb);
-            f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twb.at<float>(0)
-                << " " << twb.at<float>(1) << " " << twb.at<float>(2)
-                << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+			f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twb.at<float>(0)
+			  << " " << twb.at<float>(1) << " " << twb.at<float>(2)
+			  << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+
+            f_optic << setprecision(0) << 1e9*(*lT) << " " 
+                <<  setprecision(9) 
+                << (*optickTrackDataSeqPtr)[0].pose.position.x << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.position.y << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.position.z << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.orientation.x << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.orientation.y << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.orientation.z << " " 
+                << (*optickTrackDataSeqPtr)[0].pose.orientation.w << endl;
         }
         else
         {
@@ -689,11 +779,15 @@ void System::SaveTrajectoryEuRoC(const string &filename)
                 << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
         }
 
+        optickTrackDataSeqPtr++;
+
         // cout << "5" << endl;
     }
     //cout << "end saving trajectory" << endl;
     f.close();
-    cout << endl << "End of saving trajectory to " << filename << " ..." << endl;
+    cout << endl << "End of saving orbslam trajectory to " << orbSlamFilename << " ..." << endl;
+    f_optic.close();
+	cout << endl << "End of saving optiTrack trajectory to " << optiTrackFilename << " ..." << endl;
 }
 
 

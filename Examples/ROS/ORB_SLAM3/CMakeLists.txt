@@ -59,6 +59,7 @@ ${PROJECT_SOURCE_DIR}/../../../Thirdparty/g2o/lib/libg2o.so
 ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM3.so
 -lboost_system
 glog::glog
+${PROJECT_SOURCE_DIR}/../../../lib/libNatNet.so
 )
 
 # Node for monocular camera

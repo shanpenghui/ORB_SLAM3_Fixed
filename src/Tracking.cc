@@ -1913,6 +1913,27 @@ void Tracking::Track()
         {
             cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
             mlRelativeFramePoses.push_back(Tcr);
+            if(System::rigidBodies.empty())
+            {
+                vector<RigidBody> vRigidBody;
+                RigidBody tmpRigidBody;
+				tmpRigidBody.stamp = 0;
+				tmpRigidBody.id = 0;
+				tmpRigidBody.pose.position.x = 0;
+				tmpRigidBody.pose.position.y = 0;
+				tmpRigidBody.pose.position.z = 0;
+				tmpRigidBody.pose.orientation.x = 0;
+				tmpRigidBody.pose.orientation.y = 0;
+				tmpRigidBody.pose.orientation.z = 0;
+				tmpRigidBody.pose.orientation.w = 0;
+				tmpRigidBody.mean_error = 0;
+				tmpRigidBody.tracking_flag = 0;
+				vRigidBody.push_back(tmpRigidBody);
+                mlOptiTrackPoses.push_back(vRigidBody);
+            }
+            else{
+                mlOptiTrackPoses.push_back(System::rigidBodies.back());
+            }
             mlpReferences.push_back(mCurrentFrame.mpReferenceKF);
             mlFrameTimes.push_back(mCurrentFrame.mTimeStamp);
             mlbLost.push_back(mState==LOST);
@@ -1921,6 +1942,27 @@ void Tracking::Track()
         {
             // This can happen if tracking is lost
             mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
+            if(System::rigidBodies.empty())
+            {
+				vector<RigidBody> vRigidBody;
+				RigidBody tmpRigidBody;
+				tmpRigidBody.stamp = 0;
+				tmpRigidBody.id = 0;
+				tmpRigidBody.pose.position.x = 0;
+				tmpRigidBody.pose.position.y = 0;
+				tmpRigidBody.pose.position.z = 0;
+				tmpRigidBody.pose.orientation.x = 0;
+				tmpRigidBody.pose.orientation.y = 0;
+				tmpRigidBody.pose.orientation.z = 0;
+				tmpRigidBody.pose.orientation.w = 0;
+				tmpRigidBody.mean_error = 0;
+				tmpRigidBody.tracking_flag = 0;
+				vRigidBody.push_back(tmpRigidBody);
+				mlOptiTrackPoses.push_back(vRigidBody);
+            }
+            else{
+                mlOptiTrackPoses.push_back(System::rigidBodies.back());
+            }
             mlpReferences.push_back(mlpReferences.back());
             mlFrameTimes.push_back(mlFrameTimes.back());
             mlbLost.push_back(mState==LOST);
@@ -3925,3 +3967,4 @@ int Tracking::GetMatchesInliers()
 }
 
 } //namespace ORB_SLAM
+

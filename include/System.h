@@ -40,6 +40,12 @@
 #include "Viewer.h"
 #include "ImuTypes.h"
 
+extern OptiTrackFrameReceivedCallback g_dataCallback;
+extern NatNetClient* g_pClient;
+extern FILE* g_outputFile;
+extern sNatNetClientConnectParams g_connectParams; //NOLINT
+extern int g_analogSamplesPerMocapFrame;
+extern sServerDescription g_serverDescription;
 
 namespace ORB_SLAM3
 {
@@ -101,6 +107,9 @@ public:
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
     System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const int initFr = 0, const string &strSequence = std::string(), const string &strLoadingFile = std::string());
 
+    void run();
+    static std::vector<vector<RigidBody>> rigidBodies;
+
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
@@ -148,7 +157,7 @@ public:
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
     void SaveKeyFrameTrajectoryTUM(const string &filename);
 
-    void SaveTrajectoryEuRoC(const string &filename);
+	void SaveTrajectoryEuRoC(const string &orbSlamFilename, const string &optiTrackFilename);
     void SaveKeyFrameTrajectoryEuRoC(const string &filename);
 
     // Save data used for initialization debug
@@ -221,6 +230,7 @@ private:
     std::thread* mptLocalMapping;
     std::thread* mptLoopClosing;
     std::thread* mptViewer;
+    std::thread* mptOptiTrack;
 
     // Reset flag
     std::mutex mMutexReset;
