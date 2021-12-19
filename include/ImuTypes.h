@@ -30,7 +30,49 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
-#include <OptiTrackClient_test.hpp>
+//#include <OptiTrackClient_test.hpp>
+
+//marker.position.x
+struct Position
+{
+	double x;
+	double y;
+	double z;
+};
+
+//rigidBody.pose.orientation.x
+struct Orientation
+{
+	double x;
+	double y;
+	double z;
+	double w;
+};
+
+//rigidBody.pose.position
+//rigidBody.pose.orientation
+struct Pose
+{
+	Position position;
+	Orientation orientation;
+};
+
+struct Marker
+{
+	int id;
+	Position position;
+	int state;
+	float residual;
+};
+
+struct RigidBody
+{
+	double stamp;
+	int id;
+	Pose pose;
+	float mean_error;
+	int tracking_flag;
+};
 
 namespace ORB_SLAM3
 {

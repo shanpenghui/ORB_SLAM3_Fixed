@@ -1913,7 +1913,8 @@ void Tracking::Track()
         {
             cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
             mlRelativeFramePoses.push_back(Tcr);
-            if(System::rigidBodies.empty())
+			ORB_SLAM3::System::mOptiTrackQueueMutex.lock();
+            if(System::optiTrackRigidBodiesQueue.empty())
             {
                 vector<RigidBody> vRigidBody;
                 RigidBody tmpRigidBody;
@@ -1931,9 +1932,11 @@ void Tracking::Track()
 				vRigidBody.push_back(tmpRigidBody);
                 mlOptiTrackPoses.push_back(vRigidBody);
             }
-            else{
-                mlOptiTrackPoses.push_back(System::rigidBodies.back());
+            else
+			{
+				mlOptiTrackPoses.push_back(System::optiTrackRigidBodiesQueue.back());
             }
+			ORB_SLAM3::System::mOptiTrackQueueMutex.unlock();
             mlpReferences.push_back(mCurrentFrame.mpReferenceKF);
             mlFrameTimes.push_back(mCurrentFrame.mTimeStamp);
             mlbLost.push_back(mState==LOST);
@@ -1942,8 +1945,9 @@ void Tracking::Track()
         {
             // This can happen if tracking is lost
             mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
-            if(System::rigidBodies.empty())
-            {
+			ORB_SLAM3::System::mOptiTrackQueueMutex.lock();
+			if(System::optiTrackRigidBodiesQueue.empty())
+			{
 				vector<RigidBody> vRigidBody;
 				RigidBody tmpRigidBody;
 				tmpRigidBody.stamp = 0;
@@ -1959,10 +1963,12 @@ void Tracking::Track()
 				tmpRigidBody.tracking_flag = 0;
 				vRigidBody.push_back(tmpRigidBody);
 				mlOptiTrackPoses.push_back(vRigidBody);
-            }
-            else{
-                mlOptiTrackPoses.push_back(System::rigidBodies.back());
-            }
+			}
+			else
+			{
+				mlOptiTrackPoses.push_back(System::optiTrackRigidBodiesQueue.back());
+			}
+			ORB_SLAM3::System::mOptiTrackQueueMutex.unlock();
             mlpReferences.push_back(mlpReferences.back());
             mlFrameTimes.push_back(mlFrameTimes.back());
             mlbLost.push_back(mState==LOST);

@@ -34,17 +34,20 @@
 #include <boost/archive/xml_oarchive.hpp>
 
 // opti track
-OptiTrackFrameReceivedCallback g_dataCallback;
-NatNetClient* g_pClient = nullptr;
-FILE* g_outputFile;
-sNatNetClientConnectParams g_connectParams; //NOLINT
-int g_analogSamplesPerMocapFrame = 0;
-sServerDescription g_serverDescription;
+//OptiTrackFrameReceivedCallback g_dataCallback;
+//NatNetClient* g_pClient = nullptr;
+//FILE* g_outputFile;
+//sNatNetClientConnectParams g_connectParams; //NOLINT
+//int g_analogSamplesPerMocapFrame = 0;
+//sServerDescription g_serverDescription;
 
 namespace ORB_SLAM3
 {
 
-std::vector<vector<RigidBody>> System::rigidBodies;
+	std::mutex System::mOptiTrackMutex;
+	std::vector<RigidBody> System::optiTrackRigidBodies;
+	std::mutex System::mOptiTrackQueueMutex;
+	std::vector<std::vector<RigidBody>> System::optiTrackRigidBodiesQueue;
 
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
@@ -191,7 +194,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
 
 	// subscribe opti track
-    mptOptiTrack = new thread(&ORB_SLAM3::System::run, this);
+//    mptOptiTrack = new thread(&ORB_SLAM3::System::run, this);
     
     mpLocalMapper->mInitFr = initFr;
     mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
@@ -233,66 +236,66 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
 }
 
-void System::run()
-{
-    //保存opti_track数据
-    std::string serverAddress = "192.168.1.13";
-    std::string clientAddress = "192.168.1.23";
-
-    OptiTrackClient client([](sFrameOfMocapData *data) {
-    int marker_quantity = data->nLabeledMarkers;
-    int rigid_body_quantity = data->nRigidBodies;
-
-    std::vector<Marker> markers;
-    for(int i=0; i < data->nLabeledMarkers; i++) {
-        const auto &item = data->LabeledMarkers[i];
-        struct Position position;
-        struct Marker marker;
-
-        position.x = item.x;
-        position.y = item.y;
-        position.z = item.z;
-
-        marker.id = item.ID;
-        marker.position = position;
-        marker.state = item.params;
-        marker.residual = item.residual;
-
-        markers.push_back(marker);
-    }
-
-    std::vector<RigidBody> tmp_rigidBodies;
-    for(int i=0; i < data->nRigidBodies; i++) {
-        const auto &item = data->RigidBodies[i];
-        struct Position position;
-        struct Orientation orientation;
-        struct RigidBody rigidBody;
-        struct Pose pose;
-        
-        position.x = item.x;
-        position.y = item.y;
-        position.z = item.z;
-        orientation.x = item.qx;
-        orientation.y = item.qy;
-        orientation.z = item.qz;
-        orientation.w = item.qw;
-
-        pose.position = position;
-        pose.orientation = orientation;
-
-        // rigidBody.stamp = 
-        rigidBody.id = item.ID;
-        rigidBody.pose = pose;
-        rigidBody.mean_error = item.MeanError;
-        rigidBody.tracking_flag = item.params;
-
-        tmp_rigidBodies.push_back(rigidBody);
-    }
-    System::rigidBodies.push_back(tmp_rigidBodies);
-}, serverAddress.c_str(), clientAddress.c_str());
-
-  while(1) {}
-}
+//void System::run()
+//{
+//    //保存opti_track数据
+//    std::string serverAddress = "192.168.1.13";
+//    std::string clientAddress = "192.168.1.23";
+//
+//    OptiTrackClient client([](sFrameOfMocapData *data) {
+//    int marker_quantity = data->nLabeledMarkers;
+//    int rigid_body_quantity = data->nRigidBodies;
+//
+//    std::vector<Marker> markers;
+//    for(int i=0; i < data->nLabeledMarkers; i++) {
+//        const auto &item = data->LabeledMarkers[i];
+//        struct Position position;
+//        struct Marker marker;
+//
+//        position.x = item.x;
+//        position.y = item.y;
+//        position.z = item.z;
+//
+//        marker.id = item.ID;
+//        marker.position = position;
+//        marker.state = item.params;
+//        marker.residual = item.residual;
+//
+//        markers.push_back(marker);
+//    }
+//
+//    std::vector<RigidBody> tmp_rigidBodies;
+//    for(int i=0; i < data->nRigidBodies; i++) {
+//        const auto &item = data->RigidBodies[i];
+//        struct Position position;
+//        struct Orientation orientation;
+//        struct RigidBody rigidBody;
+//        struct Pose pose;
+//
+//        position.x = item.x;
+//        position.y = item.y;
+//        position.z = item.z;
+//        orientation.x = item.qx;
+//        orientation.y = item.qy;
+//        orientation.z = item.qz;
+//        orientation.w = item.qw;
+//
+//        pose.position = position;
+//        pose.orientation = orientation;
+//
+//        // rigidBody.stamp =
+//        rigidBody.id = item.ID;
+//        rigidBody.pose = pose;
+//        rigidBody.mean_error = item.MeanError;
+//        rigidBody.tracking_flag = item.params;
+//
+//        tmp_rigidBodies.push_back(rigidBody);
+//    }
+//    System::rigidBodies.push_back(tmp_rigidBodies);
+//}, serverAddress.c_str(), clientAddress.c_str());
+//
+//  while(1) {}
+//}
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, const vector<IMU::Point>& vImuMeas, string filename)
 {

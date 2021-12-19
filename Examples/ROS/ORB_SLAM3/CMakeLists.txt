@@ -62,6 +62,8 @@ glog::glog
 ${PROJECT_SOURCE_DIR}/../../../lib/libNatNet.so
 )
 
+rosbuild_genmsg()
+
 # Node for monocular camera
 rosbuild_add_executable(Mono
 src/ros_mono.cc
