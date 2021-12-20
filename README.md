@@ -65,7 +65,7 @@ sudo make install
 ```
 
 ippicv_2020_lnx_intel64_20191018_general.tgz 下载地址：
-链接: https://pan.baidu.com/s/1XwhaDnTaCxAIpmZCRijYvg 
+链接: https://pan.baidu.com/s/1XwhaDnTaCxAIpmZCRijYvg
 提取码: rq4r
 
 ## 2、Build ORB-SLAM3:
@@ -162,7 +162,7 @@ To solve this problem, install the module:
 sudo apt-get install libcanberra-gtk-module
 ```
 
-## 7、Run ORB-SLAM3 with Intel Realsense T265
+## 7、Run ORB-SLAM3 with Intel Realsense T265(ros1-noetic)
 
 Make sure docker is installed please !!!
 
@@ -212,7 +212,7 @@ If you want to add dataset, just add the text:
 
 into ORB_SLAM3_Fixed/shells/run_docker_gpu.sh file.
 
-### 7.3 Set Intrinsic & Extrinsic Parameters
+### 7.3 Set Camera Intrinsic & Extrinsic Parameters
 
 Run the command below:
 
@@ -270,7 +270,50 @@ Translation_Vector[2]  -->  Tbc.data[2][3]
 ![image](https://github.com/shanpenghui/ORB_SLAM3_Fixed/blob/master/pics/Tbc_data_Ext.png)
 
 
-### 7.4 Launch T265 ros node
+### 7.4 Set IMU Intrinsic Parameters
+
+#### 7.4.1 Launch T265 Camera to save imu calibration rosbag
+
+1. terminal one
+
+```shell
+mkdir -p imu_utils_ws/src && cd imu_utils_ws/src && git clone https://github.com/IntelRealSense/realsense-ros.git
+cd .. && source /opt/ros/noetic/setup.bash && catkin_make && source devel/setup.bash
+roslaunch realsense2_camera rs_t265.launch fisheye_width:=848 fisheye_height:=800 enable_fisheye1:=true enable_fisheye2:=true unite_imu_method:=copy
+```
+
+2. terminal two
+
+```shell
+rosbag record -O imu_calibration /camera/imu
+```
+
+#### 7.4.2 Launch imu utils to generate IMU intrinsic parameters
+
+1. terminal one
+
+```shell
+mkdir -p imu_utils_ws/src && cd imu_utils_ws/src && git clone https://github.com/shanpenghui/imu_utils.git
+cd .. && source /opt/ros/noetic/setup.bash && catkin_make && source devel/setup.bash
+roslaunch imu_utils realsense.launch
+```
+
+2. terminal two
+
+```shell
+rosbag play -r 200 imu_calibration.bag
+```
+
+The result is in imu_utils/imu_utils/data/t265_imu_calibration_imu_param.yaml, map to ORB-SLAM3-Fixed/Examples/Monocular-Inertial/TUM_512.yaml
+
+```shell
+Gyr.avg-axis.gyr_n  -->  IMU.NoiseGyro
+Gyr.avg-axis.gyr_w  -->  IMU.GyroWalk
+Acc.avg-axis.acc_n  -->  IMU.NoiseAcc
+Acc.avg-axis.acc_w  -->  IMU.AccWalk
+```
+
+### 7.5 Launch T265 ros node
 
 So git checkout tag , then build and run (don't forget changing the unite_imu_method param in rs_t265.launch) :
 
@@ -281,7 +324,7 @@ git checkout development
 git pull
 ```
 
-Run rs_t265.launch with params : 
+Run rs_t265.launch with params :
 
 ```shell script
 roslaunch realsense2_camera rs_t265.launch fisheye_width:=848 fisheye_height:=800 enable_fisheye1:=true enable_fisheye2:=true unite_imu_method:=copy
@@ -291,10 +334,10 @@ roslaunch realsense2_camera rs_t265.launch fisheye_width:=848 fisheye_height:=80
 
 To make this code suitable for dataset, so the topic change is not commited in code.
 
-Before use own camera, you should change imu topic name from /imu to :  
+Before use own camera, you should change imu topic name from /imu to :
 
 
- (in Line 98 of ORB_SLAM3_Fixed/Examples/ROS/ORB_SLAM3/src/ros_mono_inertial.cc)
+(in Line 98 of ORB_SLAM3_Fixed/Examples/ROS/ORB_SLAM3/src/ros_mono_inertial.cc)
 
 
 ```shell script
@@ -333,13 +376,13 @@ roslaunch ORB_SLAM3 mono_inertial.launch
 
 The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/Changelog.md) describes the features of each version.
 
-ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate. 
+ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate.
 
 We provide examples to run ORB-SLAM3 in the [EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) using stereo or monocular, with or without IMU, and in the [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) using fisheye stereo or monocular, with or without IMU. Videos of some example executions can be found at [ORB-SLAM3 channel](https://www.youtube.com/channel/UCXVt-kXG6T95Z4tVaYlU80Q).
 
 This software is based on [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2) developed by [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2)).
 
-<a href="https://youtu.be/HyLNq-98LRo" target="_blank"><img src="https://img.youtube.com/vi/HyLNq-98LRo/0.jpg" 
+<a href="https://youtu.be/HyLNq-98LRo" target="_blank"><img src="https://img.youtube.com/vi/HyLNq-98LRo/0.jpg"
 alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
 
 ### Related Publications:
@@ -350,7 +393,7 @@ alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
 
 [ORBSLAM-Atlas] Richard Elvira, J. M. M. Montiel and Juan D. Tardós, **ORBSLAM-Atlas: a robust and accurate multi-map system**, *IROS 2019*. **[PDF](https://arxiv.org/pdf/1908.11585.pdf)**.
 
-[ORBSLAM-VI] Raúl Mur-Artal, and Juan D. Tardós, **Visual-inertial monocular SLAM with map reuse**, IEEE Robotics and Automation Letters, vol. 2 no. 2, pp. 796-803, 2017. **[PDF](https://arxiv.org/pdf/1610.05949.pdf)**. 
+[ORBSLAM-VI] Raúl Mur-Artal, and Juan D. Tardós, **Visual-inertial monocular SLAM with map reuse**, IEEE Robotics and Automation Letters, vol. 2 no. 2, pp. 796-803, 2017. **[PDF](https://arxiv.org/pdf/1610.05949.pdf)**.
 
 [Stereo and RGB-D] Raúl Mur-Artal and Juan D. Tardós. **ORB-SLAM2: an Open-Source SLAM System for Monocular, Stereo and RGB-D Cameras**. *IEEE Transactions on Robotics,* vol. 33, no. 5, pp. 1255-1262, 2017. **[PDF](https://arxiv.org/pdf/1610.06475.pdf)**.
 
@@ -425,7 +468,7 @@ This will create **libORB_SLAM3.so**  at *lib* folder and the executables in *Ex
 
 1. Download a sequence (ASL format) from http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets
 
-2. Open the script "euroc_examples.sh" in the root of the project. Change **pathDatasetEuroc** variable to point to the directory where the dataset has been uncompressed. 
+2. Open the script "euroc_examples.sh" in the root of the project. Change **pathDatasetEuroc** variable to point to the directory where the dataset has been uncompressed.
 
 3. Execute the following script to process all the sequences with all sensor configurations:
 ```
@@ -445,7 +488,7 @@ Execute the following script to process sequences and compute the RMS ATE:
 
 1. Download a sequence from https://vision.in.tum.de/data/datasets/visual-inertial-dataset and uncompress it.
 
-2. Open the script "tum_vi_examples.sh" in the root of the project. Change **pathDatasetTUM_VI** variable to point to the directory where the dataset has been uncompressed. 
+2. Open the script "tum_vi_examples.sh" in the root of the project. Change **pathDatasetTUM_VI** variable to point to the directory where the dataset has been uncompressed.
 
 3. Execute the following script to process all the sequences with all sensor configurations:
 ```
@@ -453,7 +496,7 @@ Execute the following script to process sequences and compute the RMS ATE:
 ```
 
 ## Evaluation
-In TUM-VI ground truth is only available in the room where all sequences start and end. As a result the error measures the drift at the end of the sequence. 
+In TUM-VI ground truth is only available in the room where all sequences start and end. As a result the error measures the drift at the end of the sequence.
 
 Execute the following script to process sequences and compute the RMS ATE:
 ```
@@ -474,14 +517,14 @@ and add at the end the following line. Replace PATH by the folder where you clon
   ```
   export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:PATH/ORB_SLAM3/Examples/ROS
   ```
-  
+
 2. Execute `build_ros.sh` script:
 
   ```
   chmod +x build_ros.sh
   ./build_ros.sh
   ```
-  
+
 ### Running Monocular Node
 For a monocular input from topic `/camera/image_raw` run node ORB_SLAM3/Mono. You will need to provide the vocabulary file and a settings file. See the monocular examples above.
 
@@ -509,7 +552,7 @@ For a stereo input from topics `/camera/left/image_raw` and `/camera/right/image
   ```
   rosrun ORB_SLAM3 Stereo_Inertial PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION [EQUALIZATION]	
   ```
-  
+
 ### Running RGB_D Node
 For an RGB-D input from topics `/camera/rgb/image_raw` and `/camera/depth_registered/image_raw`, run node ORB_SLAM3/RGBD. You will need to provide the vocabulary file and a settings file. See the RGB-D example above.
 
@@ -521,15 +564,15 @@ For an RGB-D input from topics `/camera/rgb/image_raw` and `/camera/depth_regist
   ```
   roscore
   ```
-  
+
   ```
   rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/EuRoC.yaml true
   ```
-  
+
   ```
   rosbag play --pause V1_02_medium.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw /imu0:=/imu
   ```
-  
+
 Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
 
 **Remark:** For rosbags from TUM-VI dataset, some play issue may appear due to chunk size. One possible solution is to rebag them with the default chunk size, for example:
