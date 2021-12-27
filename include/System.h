@@ -40,6 +40,16 @@
 #include "Viewer.h"
 #include "ImuTypes.h"
 
+struct OptiTrackData
+{
+	double pose_x;
+	double pose_y;
+	double pose_z;
+	double quat_x;
+	double quat_y;
+	double quat_z;
+	double quat_w;
+};
 
 namespace ORB_SLAM3
 {
@@ -96,6 +106,11 @@ public:
         BINARY_FILE=1,
     };
 
+	static std::deque<OptiTrackData> mlOptiTrackPosesQue;
+	static std::mutex mMutexOptiTrackDataQue;
+	static std::deque<OptiTrackData> mlOptiTrackPoses;
+	static std::mutex mMutexOptiTrackPoses;
+
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
@@ -150,6 +165,7 @@ public:
 
     void SaveTrajectoryEuRoC(const string &filename);
     void SaveKeyFrameTrajectoryEuRoC(const string &filename);
+	bool SaveTrajectoryEuRoCAndOptiTrack(const string &orbSlamFilename, const string &optiTrackFilename);
 
     // Save data used for initialization debug
     void SaveDebugData(const int &iniIdx);

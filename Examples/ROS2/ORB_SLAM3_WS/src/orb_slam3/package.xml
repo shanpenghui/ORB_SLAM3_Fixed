@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>orb_slam3</name>
+  <version>1.0.0</version>
+  <description>ORBSLAM3 ROS2 wrapper</description>
+  <maintainer email="shanpenghui@gmail.com">Fabrizio Romanelli</maintainer>
+  <license>GNU</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <depend>realsense2_description</depend>
+  <depend>realsense2_camera</depend>
+  <depend>geometry_msgs</depend>
+
+  <build_depend>opti_track</build_depend>
+  <exec_depend>opti_track</exec_depend>
+
+  <exec_depend>launch_ros</exec_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

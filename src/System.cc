@@ -36,6 +36,11 @@
 namespace ORB_SLAM3
 {
 
+	std::deque<OptiTrackData> System::mlOptiTrackPosesQue;
+	std::deque<OptiTrackData> System::mlOptiTrackPoses;
+	std::mutex System::mMutexOptiTrackDataQue;
+	std::mutex System::mMutexOptiTrackPoses;
+
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
 System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
@@ -802,6 +807,152 @@ void System::SaveTrajectoryKITTI(const string &filename)
     f.close();
 }
 
+bool System::SaveTrajectoryEuRoCAndOptiTrack(const string &orbSlamFilename, const string &optiTrackFilename)
+{
+
+	cout << endl << "SaveTrajectoryEuRoC to " << orbSlamFilename << " ..." << endl;
+	/*if(mSensor==MONOCULAR)
+	{
+		cerr << "ERROR: SaveTrajectoryEuRoC cannot be used for monocular." << endl;
+		return;
+	}*/
+
+	vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+	Map* pBiggerMap;
+	int numMaxKFs = 0;
+	for(Map* pMap :vpMaps)
+	{
+		if(pMap->GetAllKeyFrames().size() > numMaxKFs)
+		{
+			numMaxKFs = pMap->GetAllKeyFrames().size();
+			pBiggerMap = pMap;
+		}
+	}
+
+	vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
+	sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+
+	// Transform all keyframes so that the first keyframe is at the origin.
+	// After a loop closure the first keyframe might not be at the origin.
+	cv::Mat Twb; // Can be word to cam0 or world to b dependingo on IMU or not.
+	if (mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO)
+		Twb = vpKFs[0]->GetImuPose();
+	else
+		Twb = vpKFs[0]->GetPoseInverse();
+
+	ofstream f;
+	f.open(orbSlamFilename.c_str());
+	// cout << "file open" << endl;
+	f << fixed;
+
+	// Frame pose is stored relative to its reference keyframe (which is optimized by BA and pose graph).
+	// We need to get first the keyframe pose and then concatenate the relative transformation.
+	// Frames not localized (tracking failure) are not saved.
+
+	// For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
+	// which is true when tracking failed (lbL).
+	list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
+	list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
+	list<bool>::iterator lbL = mpTracker->mlbLost.begin();
+
+	//cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
+	//cout << "size mlRelativeFramePoses: " << mpTracker->mlRelativeFramePoses.size() << endl;
+	//cout << "size mpTracker->mlFrameTimes: " << mpTracker->mlFrameTimes.size() << endl;
+	//cout << "size mpTracker->mlbLost: " << mpTracker->mlbLost.size() << endl;
+
+	ofstream f_optic;
+	f_optic.open(optiTrackFilename.c_str());
+	f_optic << fixed;
+	{
+		mMutexOptiTrackPoses.lock();
+		auto optickTrackDataSeqPtr = mlOptiTrackPoses.begin();
+		for(list<cv::Mat>::iterator lit=mpTracker->mlRelativeFramePoses.begin(),
+				lend=mpTracker->mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++, lbL++)
+		{
+			//cout << "1" << endl;
+			if(*lbL)
+				continue;
+
+
+			KeyFrame* pKF = *lRit;
+			//cout << "KF: " << pKF->mnId << endl;
+
+			cv::Mat Trw = cv::Mat::eye(4,4,CV_32F);
+
+			/*cout << "2" << endl;
+			cout << "KF id: " << pKF->mnId << endl;*/
+
+			// If the reference keyframe was culled, traverse the spanning tree to get a suitable keyframe.
+			if (!pKF)
+				continue;
+
+			//cout << "2.5" << endl;
+
+			while(pKF->isBad())
+			{
+				//cout << " 2.bad" << endl;
+				Trw = Trw*pKF->mTcp;
+				pKF = pKF->GetParent();
+				//cout << "--Parent KF: " << pKF->mnId << endl;
+			}
+
+			if(!pKF || pKF->GetMap() != pBiggerMap)
+			{
+				//cout << "--Parent KF is from another map" << endl;
+				/*if(pKF)
+					cout << "--Parent KF " << pKF->mnId << " is from another map " << pKF->GetMap()->GetId() << endl;*/
+				continue;
+			}
+
+			//cout << "3" << endl;
+
+			Trw = Trw*pKF->GetPose()*Twb; // Tcp*Tpw*Twb0=Tcb0 where b0 is the new world reference
+
+			// cout << "4" << endl;
+
+			if (mSensor == IMU_MONOCULAR || mSensor == IMU_STEREO)
+			{
+				cv::Mat Tbw = pKF->mImuCalib.Tbc*(*lit)*Trw;
+				cv::Mat Rwb = Tbw.rowRange(0,3).colRange(0,3).t();
+				cv::Mat twb = -Rwb*Tbw.rowRange(0,3).col(3);
+				vector<float> q = Converter::toQuaternion(Rwb);
+				f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twb.at<float>(0)
+				  << " " << twb.at<float>(1) << " " << twb.at<float>(2)
+				  << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+
+				f_optic << setprecision(0) << 1e9*(*lT) << " "
+						<<  setprecision(9)
+						<< (*optickTrackDataSeqPtr).pose_x << " "
+						<< (*optickTrackDataSeqPtr).pose_y << " "
+						<< (*optickTrackDataSeqPtr).pose_z << " "
+						<< (*optickTrackDataSeqPtr).quat_x << " "
+						<< (*optickTrackDataSeqPtr).quat_y << " "
+						<< (*optickTrackDataSeqPtr).quat_z << " "
+						<< (*optickTrackDataSeqPtr).quat_w << endl;
+			}
+			else
+			{
+				cv::Mat Tcw = (*lit)*Trw;
+				cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
+				cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
+				vector<float> q = Converter::toQuaternion(Rwc);
+				f << setprecision(0) << 1e9*(*lT) << " " <<  setprecision(9) << twc.at<float>(0)
+				  << " " << twc.at<float>(1) << " " << twc.at<float>(2)
+				  << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+			}
+
+			optickTrackDataSeqPtr++;
+		}
+		mMutexOptiTrackPoses.unlock();
+	}
+	//cout << "end saving trajectory" << endl;
+	f.close();
+	cout << endl << "End of saving orbslam trajectory to " << orbSlamFilename << " ..." << endl;
+	f_optic.close();
+	cout << endl << "End of saving optiTrack trajectory to " << optiTrackFilename << " ..." << endl;
+
+	return true;
+}
 
 void System::SaveDebugData(const int &initIdx)
 {

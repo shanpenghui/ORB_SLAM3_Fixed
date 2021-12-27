@@ -1926,6 +1926,24 @@ void Tracking::Track()
             mlbLost.push_back(mState==LOST);
         }
 
+		ORB_SLAM3::System::mMutexOptiTrackDataQue.lock();
+		if(ORB_SLAM3::System::mlOptiTrackPosesQue.empty())
+		{
+			OptiTrackData data;
+			data.pose_x = 0;
+			data.pose_y = 0;
+			data.pose_z = 0;
+			data.quat_x = 0;
+			data.quat_y = 0;
+			data.quat_z = 0;
+			data.quat_w = 1;
+			ORB_SLAM3::System::mlOptiTrackPoses.push_back(data);
+		}
+		else
+		{
+			ORB_SLAM3::System::mlOptiTrackPoses.push_back(ORB_SLAM3::System::mlOptiTrackPosesQue.back());
+		}
+		ORB_SLAM3::System::mMutexOptiTrackDataQue.unlock();
     }
 }
 
