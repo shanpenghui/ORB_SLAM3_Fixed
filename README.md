@@ -9,6 +9,24 @@ Reference article 参考文章：
 >EVO Evaluation of SLAM 5 --- ORB-SLAM3 精度和性能效果评估
 >https://blog.csdn.net/shanpenghui/article/details/109361766
 
+## Update to V1.0
+
+Examples Monocular/Monocular-Inertial is available
+
+### V1.0, December 22th, 2021
+**Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
+
+The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/blob/master/Changelog.md) describes the features of each version.
+
+ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate.
+
+We provide examples to run ORB-SLAM3 in the [EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) using stereo or monocular, with or without IMU, and in the [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) using fisheye stereo or monocular, with or without IMU. Videos of some example executions can be found at [ORB-SLAM3 channel](https://www.youtube.com/channel/UCXVt-kXG6T95Z4tVaYlU80Q).
+
+This software is based on [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2) developed by [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2)).
+
+<a href="https://youtu.be/HyLNq-98LRo" target="_blank"><img src="https://img.youtube.com/vi/HyLNq-98LRo/0.jpg"
+alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
+
 ## Add instructions for running with your own T265 camera / 新增实际用T265相机运行的说明
 
 ## 新增了MLPnP算法的详细注释
@@ -371,10 +389,10 @@ roslaunch ORB_SLAM3 mono_inertial.launch
 --------------------------------------------------
 # ORB-SLAM3
 
-### V0.3: Beta version, 4 Sep 2020
+### V1.0, December 22th, 2021
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
 
-The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/Changelog.md) describes the features of each version.
+The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/blob/master/Changelog.md) describes the features of each version.
 
 ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate.
 
@@ -387,7 +405,7 @@ alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
 
 ### Related Publications:
 
-[ORB-SLAM3] Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M. M. Montiel and Juan D. Tardós, **ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial and Multi-Map SLAM**, Under review. **[PDF](https://arxiv.org/pdf/2007.11898.pdf)**.
+[ORB-SLAM3] Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M. M. Montiel and Juan D. Tardós, **ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial and Multi-Map SLAM**, *IEEE Transactions on Robotics 37(6):1874-1890, Dec. 2021*. **[PDF](https://arxiv.org/abs/2007.11898)**.
 
 [IMU-Initialization] Carlos Campos, J. M. M. Montiel and Juan D. Tardós, **Inertial-Only Optimization for Visual-Inertial Initialization**, *ICRA 2020*. **[PDF](https://arxiv.org/pdf/2003.05766.pdf)**
 
@@ -409,13 +427,16 @@ For a closed-source version of ORB-SLAM3 for commercial purposes, please contact
 
 If you use ORB-SLAM3 in an academic work, please cite:
 
-    @article{ORBSLAM3_2020,
+    @article{ORBSLAM3_TRO,
       title={{ORB-SLAM3}: An Accurate Open-Source Library for Visual, Visual-Inertial 
                and Multi-Map {SLAM}},
       author={Campos, Carlos AND Elvira, Richard AND G\´omez, Juan J. AND Montiel, 
               Jos\'e M. M. AND Tard\'os, Juan D.},
-      journal={arXiv preprint arXiv:2007.11898},
-      year={2020}
+      journal={IEEE Transactions on Robotics}, 
+      volume={37},
+      number={6},
+      pages={1874-1890},
+      year={2021}
      }
 
 # 2. Prerequisites
@@ -428,7 +449,7 @@ We use the new thread and chrono functionalities of C++11.
 We use [Pangolin](https://github.com/stevenlovegrove/Pangolin) for visualization and user interface. Dowload and install instructions can be found at: https://github.com/stevenlovegrove/Pangolin.
 
 ## OpenCV
-We use [OpenCV](http://opencv.org) to manipulate images and features. Dowload and install instructions can be found at: http://opencv.org. **Required at leat 3.0. Tested with OpenCV 3.2.0**.
+We use [OpenCV](http://opencv.org) to manipulate images and features. Dowload and install instructions can be found at: http://opencv.org. **Required at leat 3.0. Tested with OpenCV 3.2.0 and 4.4.0**.
 
 ## Eigen3
 Required by g2o (see below). Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**.
@@ -463,7 +484,23 @@ chmod +x build.sh
 
 This will create **libORB_SLAM3.so**  at *lib* folder and the executables in *Examples* folder.
 
-# 4. EuRoC Examples
+# 4. Running ORB-SLAM3 with your camera
+
+Directory `Examples` contains several demo programs and calibration files to run ORB-SLAM3 in all sensor configurations with Intel Realsense cameras T265 and D435i. The steps needed to use your own camera are:
+
+1. Calibrate your camera following `Calibration_Tutorial.pdf` and write your calibration file `your_camera.yaml`
+
+2. Modify one of the provided demos to suit your specific camera model, and build it
+
+3. Connect the camera to your computer using USB3 or the appropriate interface
+
+4. Run ORB-SLAM3. For example, for our D435i camera, we would execute:
+
+```
+./Examples/Stereo-Inertial/stereo_inertial_realsense_D435i Vocabulary/ORBvoc.txt ./Examples/Stereo-Inertial/RealSense_D435i.yaml
+```
+
+# 5. EuRoC Examples
 [EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) was recorded with two pinhole cameras and an inertial sensor. We provide an example script to launch EuRoC sequences in all the sensor configurations.
 
 1. Download a sequence (ASL format) from http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets
@@ -483,7 +520,7 @@ Execute the following script to process sequences and compute the RMS ATE:
 ./euroc_eval_examples
 ```
 
-# 5. TUM-VI Examples
+# 6. TUM-VI Examples
 [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) was recorded with two fisheye cameras and an inertial sensor.
 
 1. Download a sequence from https://vision.in.tum.de/data/datasets/visual-inertial-dataset and uncompress it.
@@ -503,7 +540,7 @@ Execute the following script to process sequences and compute the RMS ATE:
 ./tum_vi_eval_examples
 ```
 
-# 6. ROS Examples
+# 7. ROS Examples
 
 ### Building the nodes for mono, mono-inertial, stereo, stereo-inertial and RGB-D
 Tested with ROS Melodic and ubuntu 18.04.
@@ -579,3 +616,9 @@ Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
   ```
   rosrun rosbag fastrebag.py dataset-room1_512_16.bag dataset-room1_512_16_small_chunks.bag
   ```
+
+# 8. Running time analysis
+A flag in `include\Config.h` activates time measurements. It is necessary to uncomment the line `#define REGISTER_TIMES` to obtain the time stats of one execution which is shown at the terminal and stored in a text file(`ExecTimeMean.txt`).
+
+# 9. Calibration
+You can find a tutorial for visual-inertial calibration and a detailed description of the contents of valid configuration files at  `Calibration_Tutorial.pdf`
