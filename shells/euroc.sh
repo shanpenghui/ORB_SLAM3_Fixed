@@ -5,7 +5,7 @@ runType=Monocular
 datasetType=MH_01_easy
 timestampType=MH01
 
-pathDatasetEuroc='/EuRoC' #Example, it is necesary to change it by the dataset path
+pathDatasetEuroc='/midea_robot/ros1_ws/EuRoC' #Example, it is necesary to change it by the dataset path
 if  [ -d "$pathDatasetEuroc" ];then
   echo  ""
 else

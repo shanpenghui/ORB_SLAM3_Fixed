@@ -18,7 +18,7 @@
 
 
 #include "Tracking.h"
-
+#include "glog/logging.h"
 #include "ORBmatcher.h"
 #include "FrameDrawer.h"
 #include "Converter.h"
@@ -1815,8 +1815,10 @@ void Tracking::Track()
         cout << "ERROR: There is not an active map in the atlas" << endl;
     }
 
+		// 当前状态不是 NO_IMAGES_YET 的时候才检查时间戳，相当于传感器监控器，负责检测相邻两帧之间的图像是否连续且正常，否则VIO没有意义
     if(mState!=NO_IMAGES_YET)
     {
+				// 如果上一帧图像的时间戳大于当前帧，说明相机有问题了，这时候就需要重置IMU数据队列(如果不是IMU模式的话其实可以忽略)，然后重新建个子图Atlas
         if(mLastFrame.mTimeStamp>mCurrentFrame.mTimeStamp)
         {
             cerr << "ERROR: Frame with a timestamp older than previous frame detected!" << endl;
@@ -1859,6 +1861,7 @@ void Tracking::Track()
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) && mpLastKeyFrame)
         mCurrentFrame.SetNewBias(mpLastKeyFrame->GetImuBias());
 
+		// Set in functions: CreateMapInAtlas() || Reset() || ResetActiveMap() || FrameDrawer::DrawFrame() || FrameDrawer::DrawRightFrame()
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -1866,6 +1869,7 @@ void Tracking::Track()
 
     mLastProcessedState=mState;
 
+		// 带IMU模式
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) && !mbCreatedMap)
     {
 #ifdef REGISTER_TIMES
@@ -1895,7 +1899,7 @@ void Tracking::Track()
         mbMapUpdated = true;
     }
 
-
+		// 是否初始化完成
     if(mState==NOT_INITIALIZED)
     {
         if(mSensor==System::STEREO || mSensor==System::RGBD || mSensor==System::IMU_STEREO || mSensor==System::IMU_RGBD)
@@ -1930,32 +1934,54 @@ void Tracking::Track()
 #endif
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
+				// 如果不是纯跟踪模式的话，既SLAM模式下，则需要Local Mapping
+				// 纯跟踪模式下不需要Local Mapping
         if(!mbOnlyTracking)
         {
 
             // State OK
             // Local Mapping is activated. This is the normal behaviour, unless
             // you explicitly activate the "only tracking" mode.
+						// mState==OK 表示有三种情况：
+						// 1. 单目初始化完成;
+						// 2. 双目初始化完成;
+						// 3. 上一次循环中，参考关键帧、匀速运动模型、 Local Map 这三种跟踪模式中至少有一种成功了
             if(mState==OK)
             {
 
                 // Local Mapping might have changed some MapPoints tracked in last frame
+								// 把上一帧 mLastFrame 中的可以替换的地图点都替换，相当于更新地图点
+								// TODO：为什么要在这里更新地图点？
+								// 从注释掉的结果上看的话，影响好像不太大
                 CheckReplacedInLastFrame();
 
+								// 大多数情况下是用参考关键帧来进行跟踪，但如果想用匀速运动模型来跟踪的话，必须满足以下2个条件：
+								// 1.运动速度初始化且IMU初始化 2.当前帧和上一次重定位帧是非连续的。
+								// mbVelocity == false 表示当前状态下，运动速度没初始化，没法用 TrackWithMotionModel，第一次跟踪需要用参考关键帧
+								// mCurrentFrame.mnId<mnLastRelocFrameId+2 表示当前帧和上一次重定位帧是连续的
                 if((!mbVelocity && !pCurrentMap->isImuInitialized()) || mCurrentFrame.mnId<mnLastRelocFrameId+2)
                 {
+										LOG(INFO) << "";
                     Verbose::PrintMess("TRACK: Track with respect to the reference KF ", Verbose::VERBOSITY_DEBUG);
                     bOK = TrackReferenceKeyFrame();
                 }
                 else
                 {
                     Verbose::PrintMess("TRACK: Track with motion model", Verbose::VERBOSITY_DEBUG);
+										LOG(INFO) << "";
                     bOK = TrackWithMotionModel();
                     if(!bOK)
-                        bOK = TrackReferenceKeyFrame();
+										{
+												LOG(INFO) << "";
+												bOK = TrackReferenceKeyFrame();
+										}
                 }
 
 
+								// 如果用参考关键帧或匀速运动模型跟踪失败的话，要改变状态位，有三种情况：
+								// 1. IMU模式下，如果需要重置IMU的帧数太多，则直接置为 LOST；
+								// 2. 当前子图中的关键帧数量大于10的情况下，置为 RECENTLY_LOST ，意味着短时丢失，还可能纠正过来；
+								// 3. 其他情况，直接置为 LOST；
                 if (!bOK)
                 {
                     if ( mCurrentFrame.mnId<=(mnLastRelocFrameId+mnFramesToResetIMU) &&
@@ -1975,6 +2001,7 @@ void Tracking::Track()
                     }
                 }
             }
+						// 否则，对 RECENTLY_LOST 和 LOST 两种状态进行操作
             else
             {
 
@@ -2119,6 +2146,8 @@ void Tracking::Track()
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartLMTrack = std::chrono::steady_clock::now();
 #endif
+				// 在上面，已经尝试过用参考关键帧或匀速运动模型进行跟踪，得到了初步位姿估计
+				// 这里再用 Local Map 进行跟踪(为了提高位姿精度?)
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
         {
@@ -2139,8 +2168,10 @@ void Tracking::Track()
                 bOK = TrackLocalMap();
         }
 
+				// 如果参考关键帧或匀速运动模型跟踪成功，但是 Local Map 跟踪失败，也算成功，状态位要置为 OK 。
         if(bOK)
             mState = OK;
+				// 如果参考关键帧、匀速运动模型、 Local Map 都跟踪失败，但这个时候状态位是 OK ，说明什么？
         else if (mState == OK)
         {
             if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD)
