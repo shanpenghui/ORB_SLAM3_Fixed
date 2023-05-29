@@ -2,6 +2,9 @@
 The raw address:
 https://github.com/UZ-SLAMLab/ORB_SLAM3
 
+Copy:
+git config --global core.protectNTFS false && git clone https://github.com/shanpenghui/ORB_SLAM3_Fixed
+
 Reference article 参考文章：
 >EVO Evaluation of SLAM 4 --- ORB-SLAM3 编译和利用数据集运行
 >https://blog.csdn.net/shanpenghui/article/details/109354918
